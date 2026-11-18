@@ -1,8 +1,8 @@
-import { Fragment } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getCabinetDetail, type RosterRow } from "@japan-politics/db";
+import { CabinetName } from "@/components/cabinet-name";
 import { EndDate, FormattedDate } from "@/components/formatted-date";
 import { getDb } from "@/lib/db";
 import { parseIsoDate } from "@/lib/date";
@@ -54,34 +54,34 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div>
-      <Link href="/" className="link-inline inline-flex min-h-11 items-center text-sm">
-        {tc("backToList")}
-      </Link>
-      <h1 className="mt-4 text-[32px] font-light leading-tight tracking-tight [text-wrap:balance] [word-break:keep-all] md:text-display-xl">
-        {/* 日本語は単語の途中で折れやすいので、「第N次」「改造」の前に折り返し候補を入れる */}
-        {detail.name.split(/(?=第\d+次|改造)/).map((part, index) => (
-          <Fragment key={index}>
-            {index > 0 && <wbr />}
-            {part}
-          </Fragment>
-        ))}
-      </h1>
-      <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-1 text-body">
-        <div className="flex gap-2">
-          <dt>{t("startDate")}</dt>
-          <dd className="text-ink">
-            <FormattedDate date={detail.startDate} />
-          </dd>
-        </div>
-        <div className="flex gap-2">
-          <dt>{t("endDate")}</dt>
-          <dd className="text-ink">
-            <EndDate date={detail.endDate} />
-          </dd>
-        </div>
-      </dl>
+      {/* 章の帯: 画面いっぱいの青地。影を使って、幅いっぱいに広げても横スクロールを出さない */}
+      <section className="-mt-12 bg-primary px-0 pb-12 pt-6 text-on-dark shadow-[0_0_0_100vmax_var(--color-primary)] [clip-path:inset(0_-100vmax)] md:-mt-16 md:pb-16">
+        <Link
+          href="/"
+          className="inline-flex min-h-11 items-center text-sm text-on-dark underline underline-offset-4 hover:no-underline focus-visible:outline-on-dark"
+        >
+          {tc("backToList")}
+        </Link>
+        <h1 className="mt-6 text-[32px] font-light leading-tight tracking-tight [text-wrap:balance] md:text-display-xl">
+          <CabinetName name={detail.name} />
+        </h1>
+        <dl className="mt-8 flex flex-wrap gap-x-10 gap-y-1 border-t border-on-dark/40 pt-6 text-on-dark">
+          <div className="flex gap-2">
+            <dt className="text-on-dark/80">{t("startDate")}</dt>
+            <dd className="font-medium">
+              <FormattedDate date={detail.startDate} />
+            </dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="text-on-dark/80">{t("endDate")}</dt>
+            <dd className="font-medium [&_span]:border-on-dark [&_span]:text-on-dark">
+              <EndDate date={detail.endDate} />
+            </dd>
+          </div>
+        </dl>
+      </section>
 
-      <h2 className="mt-16 text-heading-lg font-light tracking-wide md:text-heading-xl">
+      <h2 className="mt-12 text-heading-lg font-light tracking-wide md:text-heading-xl">
         {t("rosterTitle")}
       </h2>
       <div className="mt-6">
@@ -94,19 +94,19 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
             <tr className="md:table-row">
               <th
                 scope="col"
-                className="w-[30%] whitespace-nowrap px-4 py-4 font-medium tracking-wider first:pl-0"
+                className="w-[38%] whitespace-nowrap px-4 py-4 font-medium tracking-wider first:pl-0"
               >
                 {t("columns.post")}
               </th>
               <th
                 scope="col"
-                className="w-[24%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+                className="w-[28%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
               >
                 {t("columns.name")}
               </th>
               <th
                 scope="col"
-                className="w-[30%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+                className="w-[18%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
               >
                 {t("columns.tenure")}
               </th>
