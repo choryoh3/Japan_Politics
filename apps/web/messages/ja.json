@@ -1,0 +1,38 @@
+{
+  "common": {
+    "appName": "日本の人事データベース",
+    "current": "現在",
+    "source": "出典",
+    "backToList": "内閣一覧へ戻る",
+    "dateFormat": "{year}年{month}月{day}日"
+  },
+  "cabinets": {
+    "title": "歴代内閣",
+    "description": "菅内閣以降の歴代内閣と、閣僚名簿を確認できます。",
+    "empty": "内閣のデータがまだありません。",
+    "columns": {
+      "name": "内閣名",
+      "primeMinister": "内閣総理大臣",
+      "startDate": "発足日",
+      "endDate": "終了日"
+    }
+  },
+  "cabinetDetail": {
+    "period": "在任期間",
+    "startDate": "発足日",
+    "endDate": "終了日",
+    "rosterTitle": "閣僚名簿",
+    "columns": {
+      "post": "役職",
+      "name": "氏名",
+      "tenure": "在任",
+      "source": "出典"
+    },
+    "tenureFrom": "{date}から",
+    "tenureUntil": "{date}まで",
+    "tenureBetween": "{start}から{end}まで",
+    "sourceLabel": "{post}の出典",
+    "notFoundTitle": "内閣が見つかりません",
+    "notFoundBody": "指定された内閣は存在しないか、削除されました。"
+  }
+}

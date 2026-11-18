@@ -11,13 +11,17 @@
 
 ## 実行と検証
 
-- 起動コマンド: pnpm dev（ルートで実行。モノレポの構成は Sprint 1 で決める）
+- 起動コマンド: pnpm dev（ルートで実行。モノレポ: apps/web = Next.js、packages/db = Drizzle スキーマ・マイグレーション・初期データ）
 - URL: http://localhost:3000
 - 停止方法: 起動したプロセスを kill（ポート 3000）
 - 検証コマンド: pnpm test（Vitest）
 - 静的検査コマンド: pnpm lint && pnpm typecheck（ESLint + Prettier の検査と TypeScript strict）
 - ビルドコマンド: pnpm build
-- 初期データ・準備: pnpm install。DB は DATABASE_URL=file:./local.db（ファイル DB）。マイグレーションと初期データ投入のコマンドは未定（Sprint 1 で決める）
+- 初期データ・準備: 次を順に実行する（`local.db` が無い状態から可。DB は `DATABASE_URL=file:./local.db`、未設定なら同じ値。相対パスはリポジトリのルート基準）。
+  1. `pnpm install`
+  2. `pnpm db:migrate`（DB の作成。未適用のマイグレーションだけ適用する）
+  3. `pnpm db:seed`（菅内閣以降の実在の内閣・人物・閣僚人事を投入。何度実行しても件数は増えない）
+  - 2 と 3 は `pnpm db:setup` で一度に実行できる。
 
 ## 評価
 
