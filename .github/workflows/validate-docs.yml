@@ -1,0 +1,27 @@
+name: Validate docs
+
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "scripts/validate_docs.py"
+      - ".github/workflows/validate-docs.yml"
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "scripts/validate_docs.py"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate project / spec / sprint contracts
+        run: python3 scripts/validate_docs.py
