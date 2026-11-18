@@ -208,7 +208,7 @@ export function SearchBox() {
         role="listbox"
         aria-label={t("label")}
         hidden={!showPanel || options.length === 0}
-        className="absolute left-6 right-6 top-full z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-card border border-ink/20 bg-surface-card py-2 text-ink shadow-lg md:left-0 md:right-0"
+        className="absolute left-6 right-6 top-full z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-card border border-ink/20 bg-surface-card py-2 text-ink md:left-0 md:right-0"
       >
         {groups.persons.length > 0 && (
           <ul role="group" aria-labelledby={`${listId}-persons`}>
@@ -242,7 +242,7 @@ export function SearchBox() {
       {showPanel && (noResults || status === "error") && (
         <p
           role="status"
-          className="absolute left-6 right-6 top-full z-20 mt-2 rounded-card border border-ink/20 bg-surface-card px-4 py-4 text-body shadow-lg md:left-0 md:right-0"
+          className="absolute left-6 right-6 top-full z-20 mt-2 rounded-card border border-ink/20 bg-surface-card px-4 py-4 text-body md:left-0 md:right-0"
         >
           {status === "error" ? t("error") : t("noResults")}
         </p>

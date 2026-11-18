@@ -121,6 +121,12 @@ header :focus-visible {
   outline-color: var(--color-link-on-dark);
 }
 
+/* 検索の候補パネルはヘッダー内にあるが地は明るいカードなので、リングはキャンバス用の青に戻す */
+header [role="listbox"] :focus-visible,
+header [role="status"] :focus-visible {
+  outline-color: var(--link);
+}
+
 /* 内閣名・出典などのリンク: 下線なし、ホバーで下線 */
 .link-inline {
   color: var(--link);

@@ -58,16 +58,16 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
           >
             <thead className="max-md:sr-only border-b border-ink text-sm text-mute md:table-header-group">
               <tr className="md:table-row">
-                <th scope="col" className="w-[24%] px-4 py-4 font-medium first:pl-0">
+                <th scope="col" className="w-[20%] px-4 py-4 font-medium first:pl-0">
                   {t("columns.post")}
                 </th>
                 <th scope="col" className="w-[26%] px-4 py-4 font-medium">
                   {t("columns.cabinet")}
                 </th>
-                <th scope="col" className="w-[20%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[22%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.startDate")}
                 </th>
-                <th scope="col" className="w-[20%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[22%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.endDate")}
                 </th>
                 <th scope="col" className="w-[10%] whitespace-nowrap px-4 py-4 font-medium">
@@ -84,7 +84,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                   <td className="px-4 py-4 text-lg font-medium first:pl-0 max-md:w-full max-md:p-0">
                     {career.postName}
                   </td>
-                  <td className="px-4 py-4 max-md:w-full max-md:p-0">
+                  <td className="px-4 py-4 [word-break:keep-all] max-md:w-full max-md:p-0">
                     <Link
                       href={`/cabinets/${career.cabinetId}`}
                       className="link-inline inline-flex min-h-11 items-center"
@@ -94,13 +94,13 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                   </td>
                   <td
                     data-label={t("columns.startDate")}
-                    className="px-4 py-4 tabular-nums md:whitespace-nowrap max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                    className="px-4 py-4 tabular-nums md:max-lg:text-sm md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
                   >
                     <FormattedDate date={career.startDate} />
                   </td>
                   <td
                     data-label={t("columns.endDate")}
-                    className="px-4 py-4 tabular-nums md:whitespace-nowrap max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                    className="px-4 py-4 tabular-nums md:max-lg:text-sm md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
                   >
                     <EndDate date={career.endDate} />
                   </td>
@@ -111,7 +111,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                       rel="noopener noreferrer"
                       title={career.sourceNote}
                       aria-label={t("sourceLabel", { post: career.postName })}
-                      className="link-inline inline-flex min-h-11 items-center"
+                      className="link-inline inline-flex min-h-11 items-center whitespace-nowrap"
                     >
                       {tc("source")}
                     </a>

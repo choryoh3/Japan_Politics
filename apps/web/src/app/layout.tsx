@@ -2,20 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
 import { Noto_Sans_JP } from "next/font/google";
 import type { ReactNode } from "react";
 import { SearchBox } from "@/components/search-box";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { THEME_STORAGE_KEY } from "@/lib/theme";
+import { THEME_COOKIE_NAME, parseTheme } from "@/lib/theme";
 import "./globals.css";
-
-/**
- * 最初の描画の前に、保存済みの配色を html に反映する小さなスクリプト。
- * 描画後に反映すると、一瞬だけ別の配色が見えてしまうため、head で先に実行する。
- */
-const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem(${JSON.stringify(
-  THEME_STORAGE_KEY,
-)});if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
 
 // DESIGN.md の細い見出し（300）から太いボタン（700）までを使う
 const notoSansJp = Noto_Sans_JP({
@@ -34,17 +27,18 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * 全ページ共通のレイアウト。html の lang とヘッダー、文言の提供元を用意する。
+ * 全ページ共通のレイアウト（cookie を読むため、全ページが動的に描画される）。html の lang とヘッダー、文言の提供元を用意する。
  * @param props.children 各ページの中身
  */
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
   const t = await getTranslations("common");
+  // 配色はサーバーが cookie から決めて、最初の HTML に入れる。
+  // インラインスクリプトは not-found などクライアントで組み立てられる画面で実行されないため使わない。
+  // 選択が無ければ undefined になり、属性が付かず OS の設定に従う。
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE_NAME)?.value);
   return (
-    <html lang={locale} className={notoSansJp.variable} suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
+    <html lang={locale} className={notoSansJp.variable} data-theme={theme} suppressHydrationWarning>
       <body>
         <NextIntlClientProvider>
           <header className="border-b border-hairline-dark bg-canvas-dark text-on-dark">
