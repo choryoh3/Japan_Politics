@@ -282,3 +282,140 @@ Note on the retry limit: this is the third fail, which means the loop has reache
 
 VERDICT: FAIL
 RETURN_TO: designer
+
+---
+
+## 試行 4
+
+VERDICT: FAIL
+RETURN_TO: designer
+
+## Evaluator 判定: 不合格 (Sprint 1 / 試行 4)
+
+All 15 contract items pass, and so do lint, typecheck and tests. Originality now reaches 7/10. The sprint still fails, because the new blue band has caused two design regressions:
+- **Keyboard focus is almost invisible on the blue band.** This takes 機能性 to 6/10, below the 7/10 threshold.
+- **The 在任 dates now break in the middle of the date at 768px and 1024px.** This takes クラフト to 6/10, below the 7/10 threshold.
+
+Both are styling problems only, so this goes back to designer.
+
+### 不合格理由（重大な順）
+1. **Focus ring cannot be seen on the blue band (機能性, accessibility).**
+   - 再現手順:
+     - Open `/cabinets/5` at 1280px (light theme) and press Tab once. Focus goes to 「内閣一覧へ戻る」.
+     - Open `/` and press Tab once. Focus goes to 「第2次高市内閣」 in the blue row 1.
+   - 観測:
+     - The computed outline is `2px solid rgb(0,100,183)`, drawn on a `#0070d1` background. That is a 1.21:1 contrast.
+     - In the dark theme the outline is `#53b1ff` on the same blue: 2.15:1. Both are below the 3:1 minimum for non-text elements.
+     - In the screenshots `t4-focus-detail-back.png` and `t4-focus-list-row1.png` the ring is barely visible.
+     - In attempt 3 these links were on a white or black background, and the ring was clearly visible. This is a regression.
+   - 原因推定:
+     - The back link has the class `focus-visible:outline-on-dark`, but it does not take effect.
+     - The `:focus-visible { outline: 2px solid var(--link) }` rule in `globals.css` is outside any CSS layer. Rules outside a layer beat Tailwind's `@layer utilities`, so the utility class loses.
+   - 修正指示:
+     - Make the focus ring white (`--color-on-dark`, 4.95:1) inside the blue band.
+     - One way: move the global `:focus-visible` rule into `@layer base`, so utility classes can override it. Then add the white outline utility to the row 1 link in `page.tsx` as well.
+     - Another way: add a selector such as `.bg-primary :focus-visible { outline-color: var(--color-on-dark); }`.
+     - Check both the light and dark themes.
+2. **在任 dates break mid-date at 768px and 1024px (クラフト).** This was introduced by the column-width change.
+   - 再現手順: open `/cabinets/5` at 768px.
+   - 観測:
+     - The text shows as 「2023年12月 / 14日まで」 on two lines.
+     - At 768px, every non-empty 在任 cell across all 9 cabinets breaks mid-date: 19 of 19 (`/1` 1 of 1, `/4` 8 of 8, `/5` 8 of 8, `/7` 2 of 2). At 1024px, `/5` still breaks in 8 of 8 cells.
+     - The 在任 column shrank from 30% to 18%.
+     - A mid-date wrap was already a fail item at attempt 2 (on `/` at 768).
+   - 修正指示, in `apps/web/src/app/cabinets/[id]/page.tsx`:
+     - Add `whitespace-nowrap` to the 在任 `<td>` (for md and wider).
+     - Or widen the column to about 24% and take the space from 役職 (38%), which has room to spare.
+     - Keep the `left` position of each header and its cells aligned.
+3. **Text contrast on the blue band (デザインの質).**
+   - 発足日 and 終了日 (`dt`, 16px, normal weight) use `text-on-dark/80`. That works out to roughly `#cce2f6` on `#0070d1`: 3.72:1, below the 4.5:1 needed for normal-size text.
+   - On `/` at 375px, the row 1 labels such as 「内閣総理大臣」 (`td::before`, 14px) use the same 80% white and also fail.
+   - 修正指示: use 100% `text-on-dark` (4.95:1), and show the difference between label and value through font weight (the `dd` is already medium).
+4. **A 1px seam under the band (クラフト, minor).**
+   - On `/cabinets/5` at 1280px, the band's bottom edge sits at y=356.69 (a fraction of a pixel).
+   - In the pixel row at y=356, the colour is (16,121,211) inside the content width (x 48–1232) and (64,148,220) outside it. This shows as a faint horizontal line at the band's bottom edge, x 48–1232, in `t4-light-1280-_cabinets_5.png`.
+   - 修正指示: make the band height a whole number of pixels, or build the full-width background from a single element (for example one pseudo-element), so that the box-shadow edge and the background edge are not anti-aliased differently.
+
+### 前回（試行 3）不合格項目の再テスト
+1. [x] **Product-specific chapter structure (オリジナリティ).**
+   - The detail page now has a full-width `#0070d1` chapter band, with the h1 white and weight 300, followed by the roster on the white or black canvas.
+   - On the list, the current cabinet (row 1) is shown as a blue band with large type.
+   - Confirmed at 375, 768 and 1280, in light and dark.
+2. [x] **出典 alignment.**
+   - I checked every row of all 9 cabinets at 1280 and 768, in light and dark: cells whose `left` differs from their header = 0.
+   - On the list, `td` left positions also match their headers. The name in the blue row is inset by 16px (`pl-4`), which is intentional.
+3. [x] **Items 7, 9, 12, 14:** all pass. See the contract section.
+4. [x] **Minor issues from attempt 3.**
+   - At 768 on the list, the name now wraps as 「第2次岸田第2次 / 改造内閣」, so 「内閣」 is no longer left alone on a line.
+   - At 375, the lead text now wraps as 「…閣僚名簿を / 確認できます。」, so the mid-word break is gone.
+5. Horizontal scroll:
+   - `/` and `/cabinets/1` to `/9`, at 1280 / 768 / 375, light and dark (60 page loads): every page has `scrollWidth` equal to the viewport width.
+   - No link extends outside the viewport.
+
+### スプリント契約 (15/15 合格)
+- [x] 1. `docs/project.md` lines 21–24 list `pnpm install`, `db:migrate`, `db:seed` and `db:setup`.
+- [x] 2. Scratch DB `eval-s1-t4.db` did not exist beforehand. `db:migrate`, the first `db:seed` and the second `db:seed` all exited with code 0. I did not re-run `pnpm install`; I ran it in attempt 1.
+- [x] 3. Seeding twice does not add rows.
+  - Scratch DB: 9 cabinets, 87 persons, 177 appointments, the same after the second seed.
+  - Real `local.db`: I ran `db:seed` twice (both exited 0). The `/` list had 9 entries before and after.
+- [x] 4. `/` shows the h1 「歴代内閣」 and 9 rows.
+- [x] 5. The list includes 菅内閣, 第1次岸田内閣 and 第1次石破内閣.
+- [x] 6. Every row has 4 cells (name, prime minister, start date, end date), none empty.
+- [x] 7. Only row 1 (第2次高市内閣) shows 「現在」.
+- [x] 8. Rows are in descending start-date order, and the last row is 菅内閣.
+- [x] 9. I clicked all 9 names. Each opened `/cabinets/9` … `/1`, and the h1 textContent matched the clicked name exactly every time, including 「第2次岸田第2次改造内閣」.
+- [x] 10. The 菅内閣 page shows 発足日 2020年9月16日 and 終了日 2021年10月4日.
+- [x] 11. 第1次石破内閣 has 19 roster rows, with no empty 役職 or 氏名.
+- [x] 12. For all 9 cabinets, row 1 is 内閣総理大臣 and row 2 is 内閣官房長官.
+- [x] 13. 第1次石破内閣 has the row 内閣官房長官 / 林芳正.
+- [x] 14. For all 9 cabinets, each row has exactly 1 「出典」 link with an href starting `https://www.kantei.go.jp/`. Rows failing this: 0.
+- [x] 15. Not-found pages:
+  - `/cabinets/99999`, `0`, `abc`, `<script>` and `1.5` all return 404 with 「内閣が見つかりません」.
+  - Clicking 「内閣一覧へ戻る」 on `/cabinets/99999` leads to `/` with the h1 「歴代内閣」.
+
+### 回帰確認
+- None to check: this is the first sprint.
+
+### エッジケース・健全性
+- I ran `pnpm lint`, `pnpm typecheck` and `pnpm test` myself; all exit 0 (db 8 tests, web 6 tests). I did not run `pnpm build`, so as not to disturb the running dev server.
+- Console: the only error was the expected 404 for `/cabinets/99999`. There were 0 warnings.
+- API: `/api/cabinets/abc` returns 400 and `/api/cabinets/99999` returns 404. Both bodies are short JSON errors; no stack trace or secret is exposed.
+- Contrast I measured:
+  - White on `#0070d1`: 4.95:1 (OK).
+  - 80% white on `#0070d1`: 3.72:1 (fails).
+  - Focus ring `#0064b7` on `#0070d1`: 1.21:1 (fails).
+  - Focus ring `#53b1ff` on `#0070d1`: 2.15:1 (fails).
+
+### デザイン評価 (threshold 7/10)
+- **デザインの質: 7/10.**
+  - Good: the blue band, the h1 at weight 300, the white dates in medium weight, and the hairline divider together give the detail page a clear chapter.
+  - Deduction: the `dt` labels and the 375 row 1 labels are at 3.72:1 contrast.
+- **オリジナリティ: 7/10 (meets threshold).**
+  - The detail page now has two chapters: blue (identity), then white or black (roster). This follows the alternating-chapter idea in DESIGN.md.
+  - The list makes the current cabinet stand out as a blue band (`t4-light-1280-_.png`, `t4-light-375-_.png`).
+  - None of the AI-slop signs apply.
+- **クラフト: 6/10 (below threshold).**
+  - Every 在任 cell breaks mid-date at 768 and 1024 (`t4-light-768-_cabinets_5.png`).
+  - 1px seam at the band's bottom edge.
+  - Improvements: the h1 break at 375, the list name wrap at 768, the lead text, and no horizontal scroll anywhere.
+- **機能性: 6/10 (below threshold).**
+  - The focus ring on the most important links (back link and current cabinet) is barely visible (`t4-focus-detail-back.png`, `t4-focus-list-row1.png`).
+  - Otherwise everything works at all three widths.
+
+### 再テスト対象（次回、最初に確認する項目）
+1. Press Tab on `/cabinets/5` and on `/`, in light and dark. The focus ring on the blue band must be at least 3:1 against the background.
+2. At 768 and 1024, 在任 cells in `/cabinets/1`, `/4`, `/5` and `/7` must not break mid-date. Header and cell `left` positions must still match.
+3. Text on the blue band (`dt`, and the 375 list row 1 labels) must be at least 4.5:1.
+4. No seam at the band's bottom edge.
+5. Regression: contract items 7, 9, 12, 14 and full-width checks with no horizontal scroll, at 375 / 768 / 1280.
+
+### 評価で残したもの
+- Scratch DB: `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/eval-s1-t4.db`
+- On the real `local.db`, `pnpm db:seed` ran twice (contract item 3); row counts did not change.
+- Screenshots: `t4-{light|dark}-{1280|768|375}-{_|_cabinets_5|_cabinets_9}.png`, `t4-focus-detail-back.png`, `t4-focus-list-row1.png`, `t4-focus-list-row1-dark.png` and `t4-zoom-band-edge.png`, all in `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/`.
+- No images were written into the repository; `git status` shows only the designer's 3 changed files and `cabinet-name.tsx`.
+- I edited no code or docs. The browser is closed.
+- Retry count: per CLAUDE.md, this is the 4th evaluation and the retry limit (3) has already been reached. The main session should report to the user and let them decide on another designer round.
+
+VERDICT: FAIL
+RETURN_TO: designer
