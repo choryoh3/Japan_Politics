@@ -67,7 +67,7 @@ export default async function HomePage() {
                   className={
                     index === 0
                       ? // 現在の内閣は青の「章」として帯にし、下の歴代の行と段差をつける
-                        "bg-primary text-on-dark max-md:flex max-md:flex-wrap max-md:gap-x-6 max-md:px-4 max-md:py-6 [&_span]:border-on-dark [&_span]:text-on-dark [&_td]:before:text-on-dark/80 [&_td]:py-8 max-md:[&_td]:py-0 md:[&_td:first-child]:pl-4"
+                        "bg-primary text-on-dark max-md:flex max-md:flex-wrap max-md:gap-x-6 max-md:px-4 max-md:py-6 [&_span]:border-on-dark [&_span]:text-on-dark [&_td]:before:text-on-dark [&_td]:before:font-light [&_td]:py-8 max-md:[&_td]:py-0 md:[&_td:first-child]:pl-4"
                       : "border-b border-hairline hover:bg-row-hover max-md:flex max-md:flex-wrap max-md:gap-x-6 max-md:py-4"
                   }
                 >

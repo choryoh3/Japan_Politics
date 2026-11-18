@@ -70,11 +70,24 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 章の帯を画面幅いっぱいに広げた分の横スクロールを出さない */
+html,
+body {
+  overflow-x: clip;
+}
+
 /* フォーカスリングは DESIGN.md のフォーカス色（プライマリ）で、全操作要素に出す */
 :focus-visible {
   outline: 2px solid var(--link);
   outline-offset: 3px;
   border-radius: 4px;
+}
+
+/* 青い面の上では、リングを白にして 3:1 以上のコントラストを確保する */
+.bg-primary :focus-visible,
+.on-primary :focus-visible,
+.bg-primary:focus-visible {
+  outline-color: var(--color-on-dark);
 }
 
 /* 内閣名・出典などのリンク: 下線なし、ホバーで下線 */
