@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -56,8 +57,14 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
       <Link href="/" className="link-inline inline-flex min-h-11 items-center text-sm">
         {tc("backToList")}
       </Link>
-      <h1 className="mt-4 text-[32px] font-light leading-tight tracking-tight [text-wrap:balance] md:text-display-xl">
-        {detail.name}
+      <h1 className="mt-4 text-[32px] font-light leading-tight tracking-tight [text-wrap:balance] [word-break:keep-all] md:text-display-xl">
+        {/* 日本語は単語の途中で折れやすいので、「第N次」「改造」の前に折り返し候補を入れる */}
+        {detail.name.split(/(?=第\d+次|改造)/).map((part, index) => (
+          <Fragment key={index}>
+            {index > 0 && <wbr />}
+            {part}
+          </Fragment>
+        ))}
       </h1>
       <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-1 text-body">
         <div className="flex gap-2">
@@ -121,7 +128,7 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
                   {row.postName}
                 </td>
                 <td className="px-4 py-4 text-lg font-medium max-md:p-0">{row.personName}</td>
-                <td className="px-4 py-4 text-sm text-mute empty:hidden max-md:order-last max-md:w-full max-md:p-0">
+                <td className="px-4 py-4 text-sm text-mute max-md:order-last max-md:empty:hidden max-md:w-full max-md:p-0">
                   {tenureText(row, formatDate, (key, values) => t(key, values))}
                 </td>
                 <td className="px-4 py-4 max-md:p-0">

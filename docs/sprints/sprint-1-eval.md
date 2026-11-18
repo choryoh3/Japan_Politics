@@ -81,3 +81,90 @@ DESIGN.md exists and I compared the screens against it.
 
 VERDICT: FAIL
 RETURN_TO: designer
+
+---
+
+## 試行 2
+
+VERDICT: FAIL
+RETURN_TO: designer
+
+## Evaluator 判定: 不合格 (Sprint 1 / 試行 2)
+
+All 15 contract items still pass, and the three issues from attempt 1 are fixed: the 375px layout, the favicon 404 and the console error. But the attempt 2 design changes broke the detail-page table at 768px and above. When a 在任 cell is empty, the 出典 link moves left into the 在任 column, so on most rows of every cabinet it now sits under the wrong header. This is a styling regression, so it goes back to designer.
+
+### 不合格理由（重大な順）
+1. **At md (768px) and wider, the detail-page roster columns are misaligned. Severity: high.**
+   - Reproduce:
+     1. Open `/cabinets/6` (第1次石破内閣) at 1280x900, or `/cabinets/5` (第2次岸田第2次改造内閣) at 768x1024.
+     2. Look at the header and the rows.
+     3. Optionally, run `getBoundingClientRect` on the `<td>`s.
+   - Expected: each 「出典」 link sits under the 出典 header, and the 在任 column is blank when a minister served the full term.
+   - Actual:
+     - On `/cabinets/6` at 1280px, all 19 rows show 「出典」 under the 在任 header (x≈704). The 出典 column (x≈1059) is empty.
+     - On `/cabinets/5` at 768px, rows with no tenure dates (such as 内閣総理大臣 岸田文雄) put 出典 at 411–612, the 在任 column. Rows with tenure dates (松野博一, 林芳正) put it at 612–720, the correct column. So the 出典 position changes from row to row.
+     - On `/cabinets/1` (菅内閣) at 768px dark, only the last row, デジタル大臣 平井卓也, is placed correctly.
+   - Scale: rows with an empty 在任 cell, across all 9 cabinets: 18, 18, 18, 19, 15, 15, 19, 19, 17.
+   - Cause: the 在任 `<td>` in `apps/web/src/app/cabinets/[id]/page.tsx` has the class `empty:hidden` with no breakpoint. In table layout it becomes `display:none` and the cell is removed. I measured computed `display: none` on these cells at 768px.
+   - Fix: in that `<td>`, change `empty:hidden` to `max-md:empty:hidden`, so the empty cell stays in table layout at md and above. Then check `/cabinets/6` at 768 and 1280.
+   - 戻し先: designer (a class change only).
+2. **At 768px, list dates wrap in the middle. Severity: medium (craft).**
+   - Reproduce: open `/` at 768x1024.
+   - Actual: dates in the 発足日 and 終了日 columns (20% each, about 134px) wrap as 「2026年2月18 / 日」 and 「2025年10月 / 21日」. All 9 rows have at least one wrapped date. This happens in both light and dark mode, since the layout is the same.
+   - Fix: in `apps/web/src/app/page.tsx`, give the date `<td>`s at md and above `whitespace-nowrap`, or rebalance the column widths (for example, 内閣名 30% and the date columns 22% each).
+   - 戻し先: designer.
+3. **Small issue (craft).** At 375px, the `/cabinets/5` h1 breaks as 「第2次岸田第 / 2次改造内閣」, splitting 「第2次」 across lines. `text-wrap: balance` does not respect Japanese word boundaries. Wrapping the words in `<wbr>` or `word-break: auto-phrase` would help. This one alone would not fail the sprint.
+
+### 前回不合格項目の再テスト（すべて解消）
+- [x] **375px `/`.** Each of the 9 rows stacks 内閣名, 内閣総理大臣, 発足日 and 終了日 vertically. Every cell spans 24–351px, and `scrollWidth` 375 equals `clientWidth` 375, so nothing scrolls sideways. 「現在」 is shown as a pill in row 1. The labels come from `::before` content with `data-label`. The thead is sr-only.
+- [x] **375px `/cabinets/6` and `/cabinets/5`.** Each row shows 役職 (small, mute) / 氏名 + 出典 (right-aligned) / 在任. On `/cabinets/5`, 松野博一 shows 「2023年12月14日まで」 and 林芳正 shows 「2023年12月14日から」. Dark mode at 375px also looks right.
+- [x] **favicon.** `curl -I /favicon.ico` returns 200, and `/icon.svg` returns 200. The page has `<link rel=icon>` for both. The browser console logged no favicon 404. The only errors were the expected document 404s from `/cabinets/99999`. The icon is an original design (a blue square with three lines) and does not use PlayStation marks.
+- [x] **Structure of items 6, 7, 11, 12 and 14.** I parsed the HTML for all 9 cabinets and confirmed the structure is intact (details below). Visually, item 14 breaks at md and above (see 不合格理由 1).
+
+### スプリント契約 (15/15 合格, re-checked as regression)
+- [x] 1. `docs/project.md` lists `pnpm install` / `db:migrate` / `db:seed` / `db:setup`.
+- [x] 2. With a new scratch DB `eval-s1-t2.db`, `db:migrate` and `db:seed` both exit with code 0. I also ran `pnpm install` in attempt 1 and did not repeat it this time.
+- [x] 3. After seeding twice, the counts are unchanged: cabinets 9, persons 87, appointments 177.
+- [x] 4. The page shows the h1 「歴代内閣」 and 9 rows.
+- [x] 5. The list includes 菅内閣, 第1次岸田内閣 and 第1次石破内閣.
+- [x] 6. Every row has 4 cells: name, PM, start date and end date, with none empty.
+- [x] 7. Only one row says 「現在」 (第2次高市内閣), and it is row 1.
+- [x] 8. Rows run from newest to oldest (2026-02-18 → 2020-09-16), and 菅内閣 is last.
+- [x] 9. The h1 matches the cabinet name for all 9 links (`/cabinets/9`…`/1`).
+- [x] 10. 菅内閣 shows 発足日 2020年9月16日 and 終了日 2021年10月4日.
+- [x] 11. 第1次石破内閣 has 19 rows.
+- [x] 12. For all 9 cabinets, row 1 is 内閣総理大臣 and row 2 is 内閣官房長官.
+- [x] 13. 第1次石破内閣 has the row 内閣官房長官 / 林芳正.
+- [x] 14. Across all 9 cabinets, every row has exactly one link with the text 「出典」 that starts with `https://www.kantei.go.jp/`. No row fails this. As a contract item it passes, but it is placed in the wrong column at md and above (reason 1).
+- [x] 15. `/cabinets/99999` returns HTTP 404, the h1 「内閣が見つかりません」 and a 「内閣一覧へ戻る」 link to `/`.
+
+### 回帰確認
+- None to check: this is the first sprint.
+
+### エッジケース・健全性
+- `pnpm lint`, `pnpm typecheck` and `pnpm test` all pass (db 8 tests, web 6 tests).
+- Console: 0 warnings. The only errors were the expected 404s for `/cabinets/99999`.
+- Network: no 5xx.
+- No secrets or stack traces are exposed.
+- `git status` was clean when I started and when I finished.
+
+### デザイン評価 (threshold 7/10)
+- **デザインの質: 7/10.** 375px is now clean: labels are in mute colour, 氏名 is bold, rows are divided by hairlines, and 「現在」 is a pill with a thin border, so it stands out (an improvement from attempt 1). The header hairline separates it from the canvas in dark mode. Tokens are followed: `#0064b7` / `#53b1ff`, h1 weight 300.
+- **オリジナリティ: 6/10 — below threshold.** None of the "AI slop" signs apply. But the list and detail pages are still both just "heading + table", with nothing more of the product's own character. One extra idea would raise this, for example grouping the list by prime minister, or a typographic treatment of the dates.
+- **クラフト: 4/10 — below threshold.** Evidence: reasons 1 and 2. 出典 sits under the 在任 header on most rows at md and above (`/cabinets/6` at 1280, `/cabinets/1` at 768). Dates wrap mid-date on the list at 768. The h1 splits 「第2次」 across lines at 375px.
+- **機能性: 6/10 — below threshold.** 375px is good. But at desktop and tablet widths the 在任 and 出典 columns are mixed up, so the user cannot tell which column means what. On `/cabinets/5`, rows with and without tenure dates put 出典 in different places, which looks broken.
+
+### 再テスト対象（次回、最初に確認する項目）
+1. At 1280 and 768, on `/cabinets/6`, `/cabinets/1` and `/cabinets/5`: every row's 「出典」 sits in the 出典 header's column (check that the `getBoundingClientRect().left` values match). Check in both light and dark.
+2. At 768, on `/`: dates do not wrap mid-date.
+3. Re-check that 375px stays correct: the vertical stacking on `/`, `/cabinets/5` and `/cabinets/6`, and the 在任 text showing.
+4. Contract items 11, 12 and 14 (the HTML structure).
+
+### 評価で残したもの
+- A scratch DB: `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/eval-s1-t2.db`.
+- Screenshots written automatically by Playwright under `/home/user/Japan_Politics/.playwright-mcp/`.
+- I did not touch the real `local.db`, and I edited no code or docs.
+- The browser is closed.
+
+VERDICT: FAIL
+RETURN_TO: designer

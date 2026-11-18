@@ -16,7 +16,7 @@ export default async function HomePage() {
 
   return (
     <div>
-      <h1 className="text-[32px] font-light leading-tight tracking-tight [text-wrap:balance] md:text-display-xl">
+      <h1 className="text-[32px] font-light leading-tight tracking-tight [text-wrap:balance] [word-break:auto-phrase] md:text-display-xl">
         {t("title")}
       </h1>
       <p className="mt-4 max-w-[40em] text-base text-body md:text-lg">{t("description")}</p>
@@ -33,25 +33,25 @@ export default async function HomePage() {
               <tr className="md:table-row">
                 <th
                   scope="col"
-                  className="w-[34%] whitespace-nowrap px-4 py-4 font-medium tracking-wider first:pl-0"
+                  className="w-[30%] whitespace-nowrap px-4 py-4 font-medium tracking-wider first:pl-0"
                 >
                   {t("columns.name")}
                 </th>
                 <th
                   scope="col"
-                  className="w-[26%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+                  className="w-[24%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
                 >
                   {t("columns.primeMinister")}
                 </th>
                 <th
                   scope="col"
-                  className="w-[20%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+                  className="w-[23%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
                 >
                   {t("columns.startDate")}
                 </th>
                 <th
                   scope="col"
-                  className="w-[20%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+                  className="w-[23%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
                 >
                   {t("columns.endDate")}
                 </th>
@@ -79,13 +79,13 @@ export default async function HomePage() {
                   </td>
                   <td
                     data-label={t("columns.startDate")}
-                    className="px-4 py-4 max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                    className="px-4 py-4 tabular-nums md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
                   >
                     <FormattedDate date={cabinet.startDate} />
                   </td>
                   <td
                     data-label={t("columns.endDate")}
-                    className="px-4 py-4 max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                    className="px-4 py-4 tabular-nums md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
                   >
                     <EndDate date={cabinet.endDate} />
                   </td>
