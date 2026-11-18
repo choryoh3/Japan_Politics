@@ -161,3 +161,111 @@ Sprint 2 fails on one functional defect, in the theme switch. 14 of the 15 contr
 
 VERDICT: FAIL
 RETURN_TO: generator
+
+---
+
+## 試行 2
+
+VERDICT: PASS
+RETURN_TO: none
+
+## Evaluator 判定: 合格 (Sprint 2 / 試行 2)
+
+Sprint 2 passes. I re-ran all three trial-1 failures (theme lost on the not-found pages, the script-tag console error, the 768/375 craft problems) in dev (3000) and production (`pnpm build` + `next start -p 3100`), and none reproduces. All 15 contract items and the Sprint 1 regression checks pass when operated in the browser, and all four design scores are 7/10 or higher.
+
+### 前回不合格項目の再テスト（最初に実施）
+1. **Item 13 on not-found pages: 合格 in dev and production.**
+   - Pages: `/persons/99999`, `/cabinets/99999`, `/cabinets/abc`. Each was tested with the OS set to light and to dark.
+   - Repro A (toggle, then reload): the chosen theme survives the reload (for example `data-theme=dark`, body `rgb(0,0,0)`, cookie `jp-theme=dark`).
+   - Repro C (「内閣一覧へ戻る」 back to `/`): `/` shows the saved theme straight away.
+   - Repro B (theme already saved, open a not-found URL directly): the page shows the saved theme.
+   - Toggling back and reloading also survives.
+   - Server HTML: with the cookie set, `/`, `/cabinets/6` and `/persons/2` all render `<html ... data-theme="dark|light">`. Invalid cookie values (`<x>`, `dark"onload="x`) produce no attribute.
+2. **Script-tag console error: gone.** Across the whole session, the only console errors on not-found pages were the expected 404 resource messages. `Encountered a script tag` does not appear, and the server HTML no longer contains the inline script.
+3. **Theme on `/`, `/cabinets/6` and `/persons/2`: correct in every case.**
+   - Matrix: OS light/dark × toggle × reload × toggle back, in dev and production.
+   - First paint: I recorded `data-theme` and the body background on the first animation frame. Once a choice is saved, the first frame is already in the saved theme on every page, with no flash.
+   - Not-found pages in production: first-contentful-paint (104ms) is already dark. Before that the body is empty.
+   - Client-side navigation (home → cabinet → person → cabinet), back ×3, keyboard search navigation, and 7 rapid toggles then reload all keep the correct theme.
+   - Legacy saves (localStorage `jp-theme` only, no cookie): the very first paint follows the OS. After hydration the saved theme is applied and the cookie is written, so every later reload paints correctly from the first frame. This is a one-time migration, which I accept.
+4. **Craft at 768 and 375: 合格.**
+   - 768, `/persons/2`: dates are 14px. Every date's text ends at least 8px before the cell padding (at least 24px before the next column). None overflows.
+   - 375: all 5 rows have identical cell x-positions (`24,24,24,24,318`). 就任日 and 退任日 are always stacked, and every 出典 ends at the same right edge.
+   - 「第2次岸田第2次改造内閣」 still wraps at 768–900px as 「第2次岸田第2次 / 改造内閣」 (see デザイン below).
+5. **Shadows and focus rings: 合格.**
+   - The search panel and 「該当する結果はありません」 both have `box-shadow: none`.
+   - Focus rings, measured: white canvas #0064b7 2px = 5.99:1 (was 2.3:1). Dark canvas #53b1ff = 9.10:1.
+   - The blue band and the blue 「現在」 row use a white ring, and the black header keeps its ring as before (screenshots `s2t2-focus-band-light.png`, `s2t2-focus-canvas-light.png`, `s2t2-focus-home-light.png`).
+
+### スプリント契約（production 3100 で実施。検索は dev でも実施）
+- [x] 1. On `/` I clicked 第1次石破内閣, then 加藤勝信. This opened `/persons/2`, with h1 「加藤勝信」 and the sr-only 「よみがな:」 plus 「かとうかつのぶ」 right below it.
+- [x] 2. I visited all 87 people linked from the 9 cabinets (177 rows). Every row has 5 non-empty cells, 所属 links to `/cabinets/N`, and 出典 is an https link. The headers are 役職 / 所属 / 就任日 / 退任日 / 出典.
+- [x] 3. Sorting by `datetime`: 0 violations across all 87 people.
+- [x] 4. 加藤勝信 (id 2, a single person with no duplicate names) has 5 rows, including 菅内閣 / 内閣官房長官 and 第1次石破内閣 / 財務大臣.
+- [x] 5. On `/persons/2`, clicking 「菅内閣」 opened `/cabinets/1`, h1 「菅内閣」.
+- [x] 6. `/persons/99999`, `0`, `abc`, `-1` and `1.5` all return 404 with h1 「人物が見つかりません」.
+- [x] 7. The search box with placeholder 「人物・内閣を検索」 appears exactly once in the header of `/`, `/cabinets/6` and `/persons/2`.
+- [x] 8. Typing 「石破」 (real key presses, 80ms apart) showed 石破茂 under 「人物」 within 258 to 286ms of the last key.
+- [x] 9. 「かとうかつ」 showed 加藤勝信 within 226 to 288ms.
+- [x] 10. 「岸田」 showed 第1次岸田内閣 under 「内閣」 within 246 to 255ms.
+- [x] 11. 「zzzzz」 showed 「該当する結果はありません」 within 137 to 143ms.
+- [x] 12. Keyboard selection:
+  - 「石破」, ↓, Enter opened `/persons/103`.
+  - 「岸田」, ↑, Enter opened `/cabinets/2` (第1次岸田内閣).
+  - In my first scripted run in dev, ↓ + Enter pressed 800ms after typing did nothing once. I could not reproduce it afterwards: three re-runs, including one polling state at 300 to 3000ms, all had the options present at 300ms and navigated. I treat it as a one-off delay in the dev server's first response.
+- [x] 13. The theme switch works and is saved, as described above (dev and production, including the not-found pages).
+- [x] 14. `lang="ja"` on `/`, `/persons/2` and the not-found pages.
+- [x] 15. Clicking 第1次石破内閣 on `/` opened `/cabinets/6`, and row 1 is 内閣総理大臣.
+
+### 回帰確認（Sprint 1）
+- [x] `/`: h1 「歴代内閣」, 9 rows of 4 cells each. 「現在」 appears only in row 1, the order is newest first, and 菅内閣 is last. 菅内閣, 第1次岸田内閣 and 第1次石破内閣 are all present.
+- [x] All 9 cabinets: row 1 is 内閣総理大臣 and row 2 is 内閣官房長官. Every row has exactly one 出典 link starting `https://www.kantei.go.jp/`.
+- [x] 第1次石破内閣 has 19 rows and includes 林芳正.
+- [x] 菅内閣 shows 2020年9月16日 and 2021年10月4日.
+- [x] `/cabinets/99999` returns 404 with 「内閣が見つかりません」. The trial-1 theme regression on this page is resolved.
+
+### エッジケース・健全性
+- **My own runs:** `pnpm lint` exit 0, `pnpm typecheck` exit 0, `pnpm test` passed (db 14/14, web 10/10), `pnpm build` exit 0.
+- **Console:** only the expected 404 resource messages, no other errors or warnings, in dev and production. Network: no 5xx.
+- **API:**
+  - Empty, `%` and `<script>` queries return 200 with empty results.
+  - A 51-character query returns 400 `{"error":"検索語が不正です"}`.
+  - `/api/persons/abc` returns 400 and `/api/persons/99999` returns 404.
+  - No stack traces or paths in the production not-found HTML, and no secrets anywhere.
+- **Horizontal scroll:** none. Checked `/`, `/persons/2`, `/cabinets/6` and `/persons/99999` at 375/768/1024/1280 in light and dark. Every page had the expected `data-theme`.
+- **Keyboard:** the order is natural, and focus is visible on every background.
+
+### デザイン評価（閾値 7/10）
+- **デザインの質: 8/10.**
+  - The black header, blue chapter band (h1 weight 300 with a hairline, then the kana), then 「経歴」 on the canvas form a clear hierarchy in both themes (`s2t2-dark-1280-p2.png`).
+  - The search panel is flat (no shadow), with a hairline border and #f5f7fa / #181818 surfaces, which follows DESIGN.md (`s2t2-light-1024-search.png`).
+- **オリジナリティ: 7/10.** The black, blue and canvas chapters are consistent. The blue 「現在」 row on `/` and the blue fill on the selected candidate are this product's own touches. AI-slop signs: 0.
+- **クラフト: 7/10.**
+  - The trial-1 deductions are fixed: no date overflow at 768, a uniform 375 layout, no shadows, and fixed contrast.
+  - Remaining deduction: at 768 to 900px, 「第2次岸田第2次改造内閣」 still wraps as 「第2次岸田第2次 / 改造内閣」 (`s2t2-light-768-p2.png`). The break falls on an explicit `<wbr>` the markup places there (`第2次岸田<wbr>第2次<wbr>改造内閣`), so it is not a random mid-word split, and `[word-break:keep-all]` had no effect on it. It still separates 「第2次」 from 「改造」.
+- **機能性: 8/10.**
+  - Full keyboard and IME support with ARIA combobox/listbox, 44px touch targets, focus rings at 3:1 or better on every background, and the theme is saved on every page.
+
+### 改善提案（任意・次のスプリントへ）
+- In the cabinet-name rendering, place the `<wbr>` only between 「第2次岸田」 and 「第2次改造内閣」, or use `word-break: auto-phrase`, so the narrow-width break becomes 「第2次岸田 / 第2次改造内閣」 (designer).
+- When the cookie and localStorage disagree, `ThemeToggle`'s mount effect lets localStorage override the server's cookie.
+  - In normal use both are written together. They can differ when cookies are cleared, or across ports on the same host (cookies ignore the port, localStorage does not). I saw this between 3000 and 3100, which caused a one-frame flip.
+  - Prefer the cookie when it is present, and use localStorage only when there is no cookie (generator, minor).
+- The only theme test is the `parseTheme` unit test. The not-found reload regression test asked for in trial 1 (e2e or similar) has not been added.
+- While a new query is loading, the previous candidates stay visible (carried over from trial 1, unchanged).
+
+### 評価で残したもの・副作用
+- **Screenshots:** in `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/`:
+  - `s2t2-{light|dark}-{375|768|1024|1280}-{p2|nf|search}.png`
+  - `s2t2-{light|dark}-375-home.png`, `s2t2-{light|dark}-768-c6.png`, `s2t2-light-768-p2.png`
+  - `s2t2-focus-{band|canvas|home}-light.png`
+- **Logs:** in the same scratchpad: `gates-t2.log`, `build-t2.log`, `prod3100-t2.log`.
+- **Production server:** 3100 stopped (I killed PID 1958). The dev server on 3000 is still running and returns 200.
+- **Repository side effect:** `pnpm build` rewrote `apps/web/next-env.d.ts` (`./.next/dev/types/...` became `./.next/types/...`). It is the only uncommitted change. Revert it or let `pnpm dev` regenerate it, and do not commit it.
+- **Playwright MCP logs:** written under `/home/user/Japan_Politics/.playwright-mcp/`, which is gitignored.
+- **Test state:** only the `jp-theme` cookie and localStorage values in the browser on localhost. The DB was not written.
+- **Code and docs:** none edited.
+- **Browser:** closed.
+
+VERDICT: PASS
+RETURN_TO: none
