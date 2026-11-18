@@ -168,3 +168,117 @@ All 15 contract items still pass, and the three issues from attempt 1 are fixed:
 
 VERDICT: FAIL
 RETURN_TO: designer
+
+---
+
+## 試行 3
+
+VERDICT: FAIL
+RETURN_TO: designer
+
+## Evaluator 判定: 不合格 (Sprint 1 / 試行 3)
+
+All 15 contract items pass, and the five items that failed in attempt 2 are fixed. The sprint fails on one design score: **オリジナリティ is 6/10, below the 7/10 threshold you gave me.** Nothing about the product's character has changed since attempt 2. The list page and the detail page are both still "heading + table", and the app does not use the black / white / blue chapter structure that is the core of DESIGN.md. Craft and functionality now pass.
+
+Note on the retry limit: this is the third fail, which means the loop has reached its 3-retry limit (CLAUDE.md 差し戻しルール). By that rule the main session should stop the loop and ask the user, rather than call designer again automatically.
+
+### 不合格理由
+1. **オリジナリティ 6/10 (threshold 7).**
+   - 証拠:
+     - At 1280, `/` (`t3-light-1280-_.png`) is: an h1 「歴代内閣」, a lead line, then a 4-column hairline table.
+     - `/cabinets/6` (`t3-light-1280-_cabinets_6.png`) is: a back link, an h1, a dl, then a 4-column hairline table.
+     - Both pages use the same template on a single white or black canvas.
+     - DESIGN.md's signature is "alternating black, white, and PlayStation Blue chapters". There is no full-bleed band or blue (`#0070d1`) surface anywhere; blue appears only as link text and the 「現在」 pill.
+     - The only touches specific to this product are the 「現在」 pill and the 375px stacked rows.
+     - None of the AI-slop signs apply.
+   - 修正指示 (designer: markup and classes in `apps/web/src/app/page.tsx` and `apps/web/src/app/cabinets/[id]/page.tsx`, with no new data or logic). Do one or two of these:
+     - (a) On the detail page, make the h1, the dl (発足日 / 終了日) and the back link a full-bleed black or `#0070d1` "chapter" band, with h1 weight 300 and white text. The roster below stays on the white canvas. This gives the page a real chapter change.
+     - (b) In the h1 and the list names, the 「第N次」「改造」 parts are already split with `<wbr>`. Use that split for a typographic hierarchy, for example showing 「第2次」 smaller in mute colour as an eyebrow line, without changing the textContent.
+     - (c) On the list, give row 1 (the current cabinet) a band treatment with `surface-card` / `#121314` and larger type, so it stands out from the history rows below.
+   - 制約 (generator must keep these): row order; the current cabinet in row 1; 4 cells per row; h1 textContent equal to the cabinet name; 1 「出典」 link per row.
+   - 戻し先: designer. This needs no new data or logic, so it is not a generator matter.
+   - On the planner option: if the user decides originality work belongs in a later sprint, that is a scope decision for the user or planner, not something I can rule on.
+
+### 前回（試行 2）不合格項目の再テスト（すべて解消）
+1. [x] **出典 column alignment.**
+   - I checked every row of all 9 cabinets (not just 6, 1 and 5), at 1280 and 768, in light and dark: 36 page loads in total.
+   - Bad cells: 0. Every `<td>` has `display: table-cell`, and each cell's `left` matches its header.
+   - The 出典 header spans 1043–1232 at 1280 and 612–720 at 768. Every 「出典」 link sits inside that range.
+   - Screenshots confirm it: `/cabinets/5` at 768 and `/cabinets/1` at 768 dark both show 在任 text and 出典 in the right columns.
+2. [x] **768 `/` dates.** No 発足日 or 終了日 wraps mid-date. Every date sits on one line, including 「2025年10月21日」.
+   - My script flagged 「現在」, but the screenshot shows the pill on one line. The flag came from the pill's border box, not a real wrap.
+3. [x] **375px.**
+   - `/` stacks in light and dark, with `scrollWidth` 375 = 375.
+   - `/cabinets/5`, `/6` and `/1`: `scrollWidth` is 375, and all 出典 links are inside the viewport.
+   - 在任 shows where it should: `/5` has 8 rows such as 「2023年12月14日まで／から」 (display block), and `/1` has 「2021年9月1日から」.
+4. [x] **Items 11, 12 and 14 (HTML structure).** All OK; see the contract section.
+5. [x] **375 `/cabinets/5` h1.** It now breaks as 「第2次岸田 / 第2次改造内閣」, and 「第2次」 is no longer split. The textContent is unchanged: 「第2次岸田第2次改造内閣」.
+
+### スプリント契約 (15/15 合格, all re-checked by hand)
+- [x] 1. The 初期データ・準備 section of `docs/project.md` lists `pnpm install`, `db:migrate`, `db:seed` and `db:setup`.
+- [x] 2. With a new scratch DB `eval-s1-t3.db` (it did not exist beforehand), `db:migrate` and the first `db:seed` both exited with code 0.
+  - I did not re-run `pnpm install`; I ran it in attempt 1.
+- [x] 3. Seeding twice does not add rows.
+  - Scratch DB: counts are cabinets 9, persons 87, cabinet_appointments 177, unchanged after the second seed.
+  - Real `local.db`: I ran `db:seed` twice (both exited 0). The `/` list had 9 entries before and after.
+- [x] 4. `/` shows the h1 「歴代内閣」 and 9 rows.
+- [x] 5. The list includes 菅内閣, 第1次岸田内閣 and 第1次石破内閣.
+- [x] 6. Every row has 4 items: name, prime minister, start date and end date. None is empty (checked at 1280, 768 and 375).
+- [x] 7. Exactly 1 row says 「現在」, and it is row 1 (第2次高市内閣).
+- [x] 8. Rows are in strictly descending start-date order, and the last row is 菅内閣.
+- [x] 9. I clicked all 9 names on the list. Each went to `/cabinets/9`…`/1`, and the h1 matched the clicked name every time. I also checked by keyboard (Tab, then Enter) on 第1次高市内閣: it opened `/cabinets/8`.
+- [x] 10. The 菅内閣 page shows 「発足日 2020年9月16日 終了日 2021年10月4日」.
+- [x] 11. 第1次石破内閣 has 19 rows, with no empty 役職 or 氏名.
+- [x] 12. For all 9 cabinets, row 1 is 内閣総理大臣 and row 2 is 内閣官房長官.
+- [x] 13. 第1次石破内閣 has the row 内閣官房長官 / 林芳正.
+- [x] 14. For all 9 cabinets, every row has exactly 1 link with the text 「出典」 whose href starts with `https://www.kantei.go.jp/`. Rows failing this: 0.
+- [x] 15. These IDs all return HTTP 404 with 「内閣が見つかりません」: `/cabinets/99999`, `0`, `-1`, `abc`, `1.5`, `<script>`, `1e3`, `01` and a 22-digit ID.
+  - The page has a 「内閣一覧へ戻る」 link (href `/`). Clicking it leads to `/` with the h1 「歴代内閣」.
+
+### 回帰確認
+- None to check: this is the first sprint.
+
+### エッジケース・健全性
+- I ran `pnpm lint`, `pnpm typecheck` and `pnpm test` myself; all exit with code 0 (db 8 tests, web 6 tests). I did not run `pnpm build`, to avoid touching `.next` while the dev server was running.
+- Console:
+  - During this evaluation, the only errors were the expected document 404s for `/cabinets/99999`, and there were 0 warnings.
+  - The session log also has HMR WebSocket ERR_CONNECTION_REFUSED errors, but they are in a log from 11:36:57, before my evaluation started (11:39). They look like they came from the dev server restart, and I could not reproduce them.
+- Network: no 5xx.
+  - `/api/cabinets/abc` returns 400 `{"error":"内閣 ID が不正です"}`.
+  - `/api/cabinets/99999` returns 404 `{"error":"内閣が見つかりません"}`.
+  - No stack traces or secrets are exposed.
+- `favicon.ico` returns 200.
+- Keyboard: focus is visible as a 2px solid `rgb(0,100,183)` outline. `html lang="ja"` is set.
+
+### デザイン評価 (threshold 7/10; DESIGN.md and tokens.md checked)
+- **デザインの質: 7/10.**
+  - Good: h1 is 54px / weight 300, 役職 is mute, 氏名 is bold, rows are divided by hairlines, the 「現在」 pill stands out, and the tokens are followed (`#0064b7` / `#53b1ff`, black / white canvas).
+  - Deduction: at 1280, most rows have nothing in the 在任 column (30% of the width), which leaves a large blank band in the middle of the table (`t3-light-1280-_cabinets_6.png`).
+- **オリジナリティ: 6/10 — below threshold.** See 不合格理由 1.
+- **クラフト: 7/10.**
+  - Fixed: column positions are now identical across all cabinets (fixed table widths), dates do not wrap at 768, and the 375 h1 breaks at a sensible place.
+  - Remaining minor issues:
+    - At 768 on the list, 「第2次岸田第2次改造 / 内閣」 leaves 「内閣」 alone on the second line.
+    - At 375, the lead text breaks mid-word as 「確認でき / ます。」.
+- **機能性: 8/10.** At 375, 768 and 1280 every item is visible, columns line up, and 在任 / 出典 are clear. Keyboard operation works, and the 404 page offers a pill button back to the list.
+
+### 再テスト対象（次回、最初に確認する項目）
+1. Originality: whether the list and detail pages have a chapter structure and a hierarchy specific to this product (at 375 / 768 / 1280, light and dark).
+2. After the change, re-check every row of all 9 cabinets: header and 出典 `left` positions match at 1280 and 768, in light and dark.
+3. Contract items 7, 9, 12 and 14: row 1 is 「現在」, the h1 textContent matches the cabinet name, the first two rows are 総理 and 官房長官, and each row has one 出典 link.
+4. Minor: the 768 「内閣」 orphan and the 375 lead-text break.
+
+### 評価で残したもの / 注意
+- **One file was written into the repository by mistake.** A `browser_take_screenshot` call with a relative filename created `/home/user/Japan_Politics/eval-t3-list-768-light.png`. It is untracked (`??`). I am not allowed to delete files, so please have the main session delete it. It must not be committed.
+- A scratch DB: `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/eval-s1-t3.db`.
+- Screenshots in `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/`, all named `t3-*.png`. For example:
+  - `t3-light-1280-_cabinets_6.png`
+  - `t3-light-768-_cabinets_5.png`
+  - `t3-light-375-_cabinets_5.png`
+  - `t3-dark-375-_.png`
+  - `t3-dark-768-_cabinets_1.png`
+- `pnpm db:seed` was run twice on the real `local.db`, as contract item 3 requires. The row counts did not change.
+- I edited no code or docs. The browser is closed.
+
+VERDICT: FAIL
+RETURN_TO: designer
