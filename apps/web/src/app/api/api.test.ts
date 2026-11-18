@@ -140,6 +140,15 @@ describe("認証と人物の書き込み API", () => {
     expect(await kataka.json()).toMatchObject({ fields: { kana: "kanaNotHiragana" } });
     expect((await postPerson({ name: "管理太郎", kana: "あ" }, cookie)).status).toBe(409);
 
+    for (const bad of ["\u0000先頭", "管理太郎\u0000別物", "管理\u0007", "管理\n太郎"]) {
+      const res = await postPerson({ name: bad, kana: "あ" }, cookie);
+      expect(res.status).toBe(400);
+      expect(await res.json()).toMatchObject({ fields: { name: "nameInvalidChar" } });
+    }
+    const badKana = await postPerson({ name: "別人2", kana: "あ\u0000" }, cookie);
+    expect(badKana.status).toBe(400);
+    expect(await badKana.json()).toMatchObject({ fields: { kana: "kanaInvalidChar" } });
+
     const put = await app.request(`/api/persons/${id}`, {
       method: "PUT",
       headers: { ...json, Cookie: cookie },

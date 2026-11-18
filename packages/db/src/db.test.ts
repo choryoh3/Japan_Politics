@@ -154,6 +154,33 @@ describe("人物の入力検証", () => {
     expect(validatePersonInput({ name: "A", kana: "らーめん" }).ok).toBe(true);
   });
 
+  it("氏名とよみがなは NUL・BEL・改行などの制御文字を拒否する", () => {
+    for (const bad of ["\u0000評価", "評価\u0000別物", "評価\u0007", "評\n価", "評\t価"]) {
+      expect(validatePersonInput({ name: bad, kana: "あ" })).toEqual({
+        ok: false,
+        errors: { name: "nameInvalidChar" },
+      });
+    }
+    for (const bad of ["あ\u0000", "\u0000あ", "あ\u0007", "あ\nあ"]) {
+      expect(validatePersonInput({ name: "A", kana: bad })).toEqual({
+        ok: false,
+        errors: { kana: "kanaInvalidChar" },
+      });
+    }
+  });
+
+  it("メモは改行とタブを許し、NUL・BEL などは拒否する", () => {
+    expect(validatePersonInput({ name: "A", kana: "あ", memo: "一行目\n二行目\t字下げ" }).ok).toBe(
+      true,
+    );
+    for (const bad of ["a\u0000b", "a\u0007"]) {
+      expect(validatePersonInput({ name: "A", kana: "あ", memo: bad })).toEqual({
+        ok: false,
+        errors: { memo: "memoInvalidChar" },
+      });
+    }
+  });
+
   it("生年月日は実在する日付だけで、空欄は null になる", () => {
     expect(validatePersonInput({ name: "A", kana: "あ", birthDate: "2001-02-29" }).ok).toBe(false);
     const ok = validatePersonInput({ name: "A", kana: "あ", birthDate: "", memo: "" });

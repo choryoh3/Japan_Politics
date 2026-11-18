@@ -3,6 +3,28 @@ import { z } from "zod";
 /** よみがなに使える文字（ひらがなと長音符「ー」）。 */
 const HIRAGANA_PATTERN = /^[ぁ-ゖゝゞー]+$/;
 
+/** 制御文字（NUL・改行・タブ・BEL など）。氏名とよみがなでは一切許さない。 */
+const CONTROL_CHAR_PATTERN = /\p{Cc}/u;
+
+/**
+ * 制御文字を含まないかを調べる。NUL は DB 内で文字列が途切れ、重複チェックをすり抜けるため拒否する。
+ * @param value 文字列
+ * @returns 制御文字がなければ true
+ */
+function hasNoControlChar(value: string): boolean {
+  return !CONTROL_CHAR_PATTERN.test(value);
+}
+
+/**
+ * メモに使えない制御文字（改行とタブ以外）を含まないかを調べる。
+ * @param value 文字列
+ * @returns 禁止文字がなければ true
+ */
+function hasNoForbiddenMemoChar(value: string): boolean {
+  const withoutAllowed = value.replace(/[\n\r\t]/g, "");
+  return !CONTROL_CHAR_PATTERN.test(withoutAllowed);
+}
+
 /** 氏名の最大文字数。 */
 export const PERSON_NAME_MAX_LENGTH = 50;
 /** よみがなの最大文字数。 */
@@ -41,12 +63,14 @@ export const personInputSchema = z.object({
     .string({ error: "nameRequired" })
     .trim()
     .min(1, { error: "nameRequired" })
-    .max(PERSON_NAME_MAX_LENGTH, { error: "nameTooLong" }),
+    .max(PERSON_NAME_MAX_LENGTH, { error: "nameTooLong" })
+    .refine(hasNoControlChar, { error: "nameInvalidChar" }),
   kana: z
     .string({ error: "kanaRequired" })
     .trim()
     .min(1, { error: "kanaRequired" })
     .max(PERSON_KANA_MAX_LENGTH, { error: "kanaTooLong" })
+    .refine(hasNoControlChar, { error: "kanaInvalidChar" })
     .regex(HIRAGANA_PATTERN, { error: "kanaNotHiragana" }),
   birthDate: z.preprocess(
     emptyToNull,
@@ -62,6 +86,7 @@ export const personInputSchema = z.object({
       .string({ error: "memoTooLong" })
       .trim()
       .max(PERSON_MEMO_MAX_LENGTH, { error: "memoTooLong" })
+      .refine(hasNoForbiddenMemoChar, { error: "memoInvalidChar" })
       .nullable(),
   ),
 });

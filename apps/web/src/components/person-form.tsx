@@ -143,8 +143,7 @@ export function PersonForm({
     >
       <div>
         <label htmlFor="name" className="text-sm font-medium tracking-wider">
-          {t("name")}
-          <span className="ml-2 text-mute">{t("required")}</span>
+          {t("name")} <span className="ml-1 text-mute">{t("required")}</span>
         </label>
         <input
           id="name"
@@ -158,8 +157,7 @@ export function PersonForm({
       </div>
       <div>
         <label htmlFor="kana" className="text-sm font-medium tracking-wider">
-          {t("kana")}
-          <span className="ml-2 text-mute">{t("required")}</span>
+          {t("kana")} <span className="ml-1 text-mute">{t("required")}</span>
         </label>
         <input
           id="kana"

@@ -109,14 +109,12 @@ body {
 :focus-visible {
   outline: 2px solid var(--link);
   outline-offset: 3px;
-  border-radius: 4px;
   scroll-margin: 16px;
 }
 
 /* 青い面の上では、リングを白にして 3:1 以上のコントラストを確保する */
 .bg-primary :focus-visible,
-.on-primary :focus-visible,
-.bg-primary:focus-visible {
+.on-primary :focus-visible {
   outline-color: var(--color-on-dark);
 }
 

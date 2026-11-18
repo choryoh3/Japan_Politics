@@ -30,8 +30,12 @@ export async function AuthNav() {
   }
 
   return (
-    <nav aria-label={t("account")} className="flex flex-wrap items-center gap-x-6">
-      <span className="text-sm text-on-dark" data-testid="current-user-name">
+    <nav aria-label={t("account")} className="flex min-w-0 items-center gap-x-6">
+      <span
+        className="max-w-32 truncate text-sm text-on-dark md:max-w-40 xl:max-w-56"
+        data-testid="current-user-name"
+        title={current.name}
+      >
         {current.name}
       </span>
       {current.role === "admin" ? (
