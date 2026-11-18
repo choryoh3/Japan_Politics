@@ -166,7 +166,7 @@ export function SearchBox() {
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => go(option)}
         onMouseEnter={() => setActiveIndex(index)}
-        className={`flex min-h-11 cursor-pointer items-baseline gap-3 px-4 py-2 ${
+        className={`flex min-h-11 cursor-pointer flex-wrap items-baseline gap-x-3 px-4 py-2 ${
           active ? "bg-primary text-on-dark" : "text-ink"
         }`}
       >
@@ -183,7 +183,7 @@ export function SearchBox() {
   const activeOption = options[activeIndex];
 
   return (
-    <div ref={containerRef} onBlur={handleBlur} className="relative w-full md:max-w-sm">
+    <div ref={containerRef} onBlur={handleBlur} className="min-w-0 flex-1 md:relative md:max-w-sm">
       <input
         type="search"
         role="combobox"
@@ -201,21 +201,21 @@ export function SearchBox() {
         onChange={(e) => handleChange(e.target.value)}
         onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
-        className="h-11 w-full rounded-full border border-on-dark/40 bg-transparent px-5 text-base text-on-dark placeholder:text-on-dark-mute"
+        className="h-11 w-full rounded-full [color-scheme:dark] border border-on-dark/40 bg-transparent px-3 text-base text-on-dark placeholder:text-on-dark-mute transition-colors hover:border-on-dark/70 focus:border-on-dark md:px-5"
       />
       <div
         id={listId}
         role="listbox"
         aria-label={t("label")}
         hidden={!showPanel || options.length === 0}
-        className="absolute left-0 right-0 top-full z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-card border border-hairline bg-canvas py-2 text-ink shadow-lg"
+        className="absolute left-6 right-6 top-full z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-card border border-ink/20 bg-surface-card py-2 text-ink shadow-lg md:left-0 md:right-0"
       >
         {groups.persons.length > 0 && (
           <ul role="group" aria-labelledby={`${listId}-persons`}>
             <li
               role="presentation"
               id={`${listId}-persons`}
-              className="px-4 pt-2 text-sm text-mute"
+              className="px-4 pb-1 pt-2 text-sm font-medium tracking-wider text-mute"
             >
               {t("persons")}
             </li>
@@ -223,11 +223,15 @@ export function SearchBox() {
           </ul>
         )}
         {groups.cabinets.length > 0 && (
-          <ul role="group" aria-labelledby={`${listId}-cabinets`}>
+          <ul
+            role="group"
+            aria-labelledby={`${listId}-cabinets`}
+            className={groups.persons.length > 0 ? "mt-2 border-t border-hairline pt-1" : ""}
+          >
             <li
               role="presentation"
               id={`${listId}-cabinets`}
-              className="px-4 pt-2 text-sm text-mute"
+              className="px-4 pb-1 pt-2 text-sm font-medium tracking-wider text-mute"
             >
               {t("cabinets")}
             </li>
@@ -238,7 +242,7 @@ export function SearchBox() {
       {showPanel && (noResults || status === "error") && (
         <p
           role="status"
-          className="absolute left-0 right-0 top-full z-20 mt-2 rounded-card border border-hairline bg-canvas px-4 py-3 text-ink shadow-lg"
+          className="absolute left-6 right-6 top-full z-20 mt-2 rounded-card border border-ink/20 bg-surface-card px-4 py-4 text-body shadow-lg md:left-0 md:right-0"
         >
           {status === "error" ? t("error") : t("noResults")}
         </p>

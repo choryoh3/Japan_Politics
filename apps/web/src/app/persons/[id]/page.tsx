@@ -27,19 +27,22 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div>
-      <Link
-        href="/"
-        className="inline-flex min-h-11 items-center text-sm text-link underline underline-offset-4 hover:no-underline"
-      >
-        {tc("backToList")}
-      </Link>
-      <h1 className="mt-4 text-[32px] font-light leading-tight tracking-tight md:text-display-xl">
-        {profile.name}
-      </h1>
-      <p className="mt-2 text-lg text-body">
-        <span className="sr-only">{t("kanaLabel")}: </span>
-        {profile.kana}
-      </p>
+      {/* 章の帯: 内閣詳細と同じ、画面いっぱいの青地（影ではなく疑似要素で幅を広げ、横スクロールを出さない） */}
+      <section className="on-primary relative isolate -mt-12 px-0 pb-12 pt-6 text-on-dark before:absolute before:inset-y-0 before:-left-[100vmax] before:-right-[100vmax] before:-z-10 before:bg-primary [clip-path:inset(0_-100vmax)] md:-mt-16 md:pb-16">
+        <Link
+          href="/"
+          className="inline-flex min-h-11 items-center text-sm text-on-dark underline underline-offset-4 hover:no-underline"
+        >
+          {tc("backToList")}
+        </Link>
+        <h1 className="mt-6 text-[32px] font-light leading-tight tracking-tight [text-wrap:balance] md:text-display-xl">
+          {profile.name}
+        </h1>
+        <p className="mt-2 border-t border-on-dark/40 pt-4 text-lg font-light text-on-dark">
+          <span className="sr-only">{t("kanaLabel")}: </span>
+          {profile.kana}
+        </p>
+      </section>
 
       <h2 className="mt-12 text-heading-lg font-light tracking-wide md:text-heading-xl">
         {t("careerTitle")}
@@ -101,7 +104,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                   >
                     <EndDate date={career.endDate} />
                   </td>
-                  <td className="px-4 py-4 max-md:p-0">
+                  <td className="px-4 py-4 max-md:ml-auto max-md:self-end max-md:p-0">
                     <a
                       href={career.sourceUrl}
                       target="_blank"

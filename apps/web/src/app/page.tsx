@@ -76,7 +76,7 @@ export default async function HomePage() {
                       href={`/cabinets/${cabinet.id}`}
                       className={`link-inline inline-flex min-h-11 items-center font-medium ${
                         index === 0
-                          ? "text-heading-lg !text-on-dark underline md:text-heading-xl"
+                          ? "text-heading-lg !text-on-dark underline lg:text-heading-xl"
                           : "text-lg"
                       }`}
                     >

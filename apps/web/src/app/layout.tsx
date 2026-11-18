@@ -48,10 +48,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body>
         <NextIntlClientProvider>
           <header className="border-b border-hairline-dark bg-canvas-dark text-on-dark">
-            <div className="mx-auto flex min-h-12 max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-2 md:px-12">
+            <div className="relative mx-auto flex min-h-12 max-w-7xl flex-wrap items-center gap-x-3 gap-y-1 px-6 py-3 md:gap-x-6 md:px-12 md:py-2">
               <Link
                 href="/"
-                className="mr-auto min-h-11 shrink-0 py-2 text-lg font-medium tracking-wider text-on-dark"
+                className="flex min-h-11 w-full shrink-0 items-center text-lg font-medium tracking-wider text-on-dark md:mr-auto md:w-auto"
               >
                 {t("appName")}
               </Link>

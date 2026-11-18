@@ -116,6 +116,11 @@ body {
   outline-color: var(--color-on-dark);
 }
 
+/* ヘッダーは常に黒地なので、リングは黒地で 3:1 以上になる明るい青にする */
+header :focus-visible {
+  outline-color: var(--color-link-on-dark);
+}
+
 /* 内閣名・出典などのリンク: 下線なし、ホバーで下線 */
 .link-inline {
   color: var(--link);
