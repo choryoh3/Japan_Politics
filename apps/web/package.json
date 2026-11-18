@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.26",
     "@japan-politics/db": "workspace:*",
+    "better-auth": "^1.7.26",
     "hono": "^4.13.19",
     "next": "^16.4.6",
     "next-intl": "^4.15.1",

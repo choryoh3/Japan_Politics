@@ -13,3 +13,20 @@ export {
   type SearchSuggestions,
   type RosterRow,
 } from "./queries.ts";
+export {
+  PERSON_KANA_MAX_LENGTH,
+  PERSON_MEMO_MAX_LENGTH,
+  PERSON_NAME_MAX_LENGTH,
+  personInputSchema,
+  validatePersonInput,
+  type PersonInput,
+  type PersonInputErrors,
+} from "./person-input.ts";
+export {
+  createPerson,
+  deletePerson,
+  grantAdmin,
+  updatePerson,
+  type GrantAdminResult,
+  type PersonWriteResult,
+} from "./person-write.ts";

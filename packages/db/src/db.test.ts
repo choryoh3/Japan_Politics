@@ -2,7 +2,11 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
 import { createDb, type Db } from "./client.ts";
+import { validatePersonInput } from "./person-input.ts";
+import { createPerson, deletePerson, grantAdmin, updatePerson } from "./person-write.ts";
+import { user } from "./schema.ts";
 import { runMigrations } from "./migrate.ts";
 import { getCabinetDetail, getPersonProfile, listCabinets, searchSuggestions } from "./queries.ts";
 import { seedInitialData } from "./seed.ts";
@@ -133,5 +137,87 @@ describe("横断検索", () => {
       expect(r.persons).toHaveLength(0);
       expect(r.cabinets).toHaveLength(0);
     }
+  });
+});
+
+describe("人物の入力検証", () => {
+  it("氏名もよみがなも空だとエラーコードが返る", () => {
+    const result = validatePersonInput({ name: " ", kana: "" });
+    expect(result).toEqual({ ok: false, errors: { name: "nameRequired", kana: "kanaRequired" } });
+  });
+
+  it("よみがなはひらがなだけ（カタカナ・漢字・英字は不可、長音符は可）", () => {
+    for (const kana of ["カタカナ", "山田", "abc", "ひらカナ"]) {
+      const result = validatePersonInput({ name: "A", kana });
+      expect(result.ok).toBe(false);
+    }
+    expect(validatePersonInput({ name: "A", kana: "らーめん" }).ok).toBe(true);
+  });
+
+  it("生年月日は実在する日付だけで、空欄は null になる", () => {
+    expect(validatePersonInput({ name: "A", kana: "あ", birthDate: "2001-02-29" }).ok).toBe(false);
+    const ok = validatePersonInput({ name: "A", kana: "あ", birthDate: "", memo: "" });
+    expect(ok).toEqual({
+      ok: true,
+      value: { name: "A", kana: "あ", birthDate: null, memo: null },
+    });
+  });
+});
+
+describe("人物の追加・修正・削除と管理者付与", () => {
+  it("追加した人物を修正でき、同じ氏名は重複として拒否される", async () => {
+    const created = await createPerson(db, {
+      name: "試験一郎",
+      kana: "しけんいちろう",
+      birthDate: "1980-01-02",
+      memo: null,
+    });
+    expect(created.ok).toBe(true);
+    const id = (created as { id: number }).id;
+    const dup = await createPerson(db, {
+      name: "試験一郎",
+      kana: "あ",
+      birthDate: null,
+      memo: null,
+    });
+    expect(dup).toEqual({ ok: false, reason: "duplicate" });
+    await updatePerson(db, id, {
+      name: "試験二郎",
+      kana: "しけんじろう",
+      birthDate: null,
+      memo: "メモ",
+    });
+    const profile = await getPersonProfile(db, id);
+    expect(profile).toMatchObject({ name: "試験二郎", birthDate: null, memo: "メモ" });
+    expect(
+      await updatePerson(db, 999999, { name: "x", kana: "あ", birthDate: null, memo: null }),
+    ).toEqual({ ok: false, reason: "notFound" });
+  });
+
+  it("経歴のない人物は削除でき、経歴のある人物は削除できない", async () => {
+    const created = await createPerson(db, {
+      name: "削除対象",
+      kana: "さくじょ",
+      birthDate: null,
+      memo: null,
+    });
+    const id = (created as { id: number }).id;
+    expect(await deletePerson(db, id)).toEqual({ ok: true, id });
+    expect(await getPersonProfile(db, id)).toBeNull();
+    expect(await deletePerson(db, id)).toEqual({ ok: false, reason: "notFound" });
+    const withCareer = (await searchSuggestions(db, "石破茂")).persons[0]!;
+    expect(await deletePerson(db, withCareer.id)).toEqual({ ok: false, reason: "hasCareers" });
+    expect(await getPersonProfile(db, withCareer.id)).not.toBeNull();
+  });
+
+  it("管理者付与: 登録済みメールは role が admin になり、未登録は noAccount", async () => {
+    const now = new Date();
+    await db
+      .insert(user)
+      .values({ id: "u1", name: "A", email: "a@example.com", createdAt: now, updatedAt: now });
+    expect(await grantAdmin(db, "A@Example.com")).toEqual({ ok: true });
+    const [row] = await db.select().from(user).where(eq(user.id, "u1"));
+    expect(row?.role).toBe("admin");
+    expect(await grantAdmin(db, "none@example.com")).toEqual({ ok: false, reason: "noAccount" });
   });
 });

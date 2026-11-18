@@ -61,6 +61,83 @@
     "sourceLabel": "{post}の出典",
     "empty": "経歴がまだありません。",
     "notFoundTitle": "人物が見つかりません",
-    "notFoundBody": "指定された人物は存在しないか、削除されました。"
+    "notFoundBody": "指定された人物は存在しないか、削除されました。",
+    "birthDate": "生年月日",
+    "memoLabel": "メモ",
+    "edit": "編集",
+    "delete": "削除",
+    "deleteDialogTitle": "人物を削除しますか",
+    "deleteDialogBody": "{name}を削除します。この操作は取り消せません。",
+    "deleteConfirm": "削除する",
+    "deleteCancel": "キャンセル",
+    "deleting": "削除中",
+    "deleteErrors": {
+      "hasCareers": "経歴のある人物は削除できません",
+      "notFound": "人物が見つかりません。既に削除された可能性があります。",
+      "forbidden": "管理者だけが使える操作です",
+      "unknown": "削除できませんでした。時間をおいてもう一度お試しください。"
+    }
+  },
+  "nav": {
+    "login": "ログイン",
+    "register": "新規登録",
+    "logout": "ログアウト",
+    "addPerson": "人物を追加",
+    "account": "ログイン中のアカウント",
+    "adminBadge": "管理者"
+  },
+  "auth": {
+    "loginTitle": "ログイン",
+    "registerTitle": "アカウント登録",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "displayName": "表示名",
+    "passwordHint": "8文字以上で入力してください",
+    "loginSubmit": "ログイン",
+    "registerSubmit": "登録する",
+    "submitting": "送信中",
+    "toRegister": "アカウントをお持ちでない方は登録へ",
+    "toLogin": "登録済みの方はログインへ",
+    "errors": {
+      "nameRequired": "表示名を入力してください",
+      "emailRequired": "メールアドレスを入力してください",
+      "emailInvalid": "メールアドレスの形式が正しくありません",
+      "passwordTooShort": "パスワードは8文字以上にしてください",
+      "passwordTooLong": "パスワードが長すぎます",
+      "passwordRequired": "パスワードを入力してください",
+      "emailTaken": "このメールアドレスは既に登録されています",
+      "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
+      "unknown": "処理できませんでした。時間をおいてもう一度お試しください。"
+    }
+  },
+  "personForm": {
+    "createTitle": "人物を追加",
+    "editTitle": "人物を編集",
+    "name": "氏名",
+    "kana": "よみがな",
+    "kanaHint": "ひらがなで入力してください",
+    "birthDate": "生年月日（任意）",
+    "memo": "メモ（任意）",
+    "save": "保存",
+    "saving": "保存中",
+    "cancel": "キャンセル",
+    "required": "必須",
+    "forbiddenTitle": "この操作は管理者だけができます",
+    "forbiddenBody": "人物の追加・修正・削除は管理者のアカウントでログインしてください。",
+    "loginRequiredTitle": "ログインが必要です",
+    "loginRequiredBody": "人物の追加・修正は管理者のアカウントでログインしてください。",
+    "errors": {
+      "nameRequired": "氏名を入力してください",
+      "nameTooLong": "氏名は50文字以内にしてください",
+      "nameDuplicate": "同じ氏名の人物が既に登録されています",
+      "kanaRequired": "よみがなを入力してください",
+      "kanaTooLong": "よみがなは100文字以内にしてください",
+      "kanaNotHiragana": "よみがなはひらがなで入力してください",
+      "birthDateInvalid": "生年月日は実在する日付で入力してください",
+      "memoTooLong": "メモは1000文字以内にしてください",
+      "unauthorized": "ログインが必要です。ログインし直してください。",
+      "forbidden": "管理者だけが使える操作です",
+      "unknown": "保存できませんでした。時間をおいてもう一度お試しください。"
+    }
   }
 }

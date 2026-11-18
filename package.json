@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "db:migrate": "pnpm --filter @japan-politics/db migrate",
     "db:seed": "pnpm --filter @japan-politics/db seed",
+    "admin:grant": "pnpm --silent --filter @japan-politics/db admin:grant",
     "db:setup": "pnpm db:migrate && pnpm db:seed"
   },
   "devDependencies": {

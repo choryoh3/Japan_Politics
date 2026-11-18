@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getPersonProfile } from "@japan-politics/db";
+import { PersonAdminActions } from "@/components/person-admin-actions";
 import { CabinetName } from "@/components/cabinet-name";
 import { EndDate, FormattedDate } from "@/components/formatted-date";
 import { parseCabinetId } from "@/lib/cabinet-id";
+import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +24,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
   const profile = await getPersonProfile(getDb(), personId);
   if (!profile) notFound();
 
+  const current = await getCurrentUser();
   const t = await getTranslations("personDetail");
   const tc = await getTranslations("common");
 
@@ -42,7 +45,22 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
           <span className="sr-only">{t("kanaLabel")}: </span>
           {profile.kana}
         </p>
+        {profile.birthDate ? (
+          <p className="mt-2 text-base font-light text-on-dark">
+            {t("birthDate")}: <FormattedDate date={profile.birthDate} />
+          </p>
+        ) : null}
+        {profile.memo ? (
+          <p className="mt-2 whitespace-pre-wrap text-base font-light text-on-dark">
+            <span className="sr-only">{t("memoLabel")}: </span>
+            {profile.memo}
+          </p>
+        ) : null}
       </section>
+
+      {current?.role === "admin" ? (
+        <PersonAdminActions personId={profile.id} personName={profile.name} />
+      ) : null}
 
       <h2 className="mt-12 text-heading-lg font-light tracking-wide md:text-heading-xl">
         {t("careerTitle")}

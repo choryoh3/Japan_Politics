@@ -13,6 +13,7 @@
   --hairline: #e5e5e5;
   --link: #0064b7;
   --row-hover: #f5f7fa;
+  --warning-ink: #c81b3a;
   color-scheme: light;
 }
 
@@ -40,6 +41,7 @@
   --hairline: rgba(229, 229, 229, 0.2);
   --link: #53b1ff;
   --row-hover: #121314;
+  --warning-ink: #ff6b86;
   color-scheme: dark;
 }
 
@@ -52,6 +54,7 @@
   --hairline: #e5e5e5;
   --link: #0064b7;
   --row-hover: #f5f7fa;
+  --warning-ink: #c81b3a;
   color-scheme: light;
 }
 
@@ -64,6 +67,7 @@
   --color-hairline: var(--hairline);
   --color-link: var(--link);
   --color-row-hover: var(--row-hover);
+  --color-warning-ink: var(--warning-ink);
   --font-sans:
     var(--font-noto-sans-jp), "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
 }

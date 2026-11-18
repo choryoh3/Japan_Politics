@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { Noto_Sans_JP } from "next/font/google";
 import type { ReactNode } from "react";
+import { AuthNav } from "@/components/auth-nav";
 import { SearchBox } from "@/components/search-box";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { THEME_COOKIE_NAME, parseTheme } from "@/lib/theme";
@@ -50,6 +51,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 {t("appName")}
               </Link>
               <SearchBox />
+              <AuthNav />
               <ThemeToggle />
             </div>
           </header>

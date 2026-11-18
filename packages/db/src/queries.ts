@@ -109,6 +109,10 @@ export interface PersonProfile {
   id: number;
   name: string;
   kana: string;
+  /** 生年月日（「YYYY-MM-DD」。未登録なら null） */
+  birthDate: string | null;
+  /** メモ（未登録なら null） */
+  memo: string | null;
   /** 就任日の新しい順 */
   careers: CareerRow[];
 }
@@ -166,7 +170,14 @@ export async function getPersonProfile(db: Db, id: number): Promise<PersonProfil
       sourceUrl: row.sourceUrl,
       sourceNote: row.sourceNote,
     }));
-  return { id: person.id, name: person.name, kana: person.kana, careers };
+  return {
+    id: person.id,
+    name: person.name,
+    kana: person.kana,
+    birthDate: person.birthDate,
+    memo: person.memo,
+    careers,
+  };
 }
 
 /** 検索候補の 1 件。 */

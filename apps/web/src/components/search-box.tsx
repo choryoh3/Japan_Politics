@@ -183,7 +183,11 @@ export function SearchBox() {
   const activeOption = options[activeIndex];
 
   return (
-    <div ref={containerRef} onBlur={handleBlur} className="min-w-0 flex-1 md:relative md:max-w-sm">
+    <div
+      ref={containerRef}
+      onBlur={handleBlur}
+      className="min-w-0 flex-1 max-md:order-last max-md:basis-full md:relative md:max-w-sm"
+    >
       <input
         type="search"
         role="combobox"

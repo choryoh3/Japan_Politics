@@ -7,6 +7,10 @@ export const persons = sqliteTable("persons", {
   name: text("name").notNull().unique(),
   /** よみがな（ひらがな） */
   kana: text("kana").notNull(),
+  /** 生年月日（「YYYY-MM-DD」。任意） */
+  birthDate: text("birth_date"),
+  /** メモ（任意） */
+  memo: text("memo"),
 });
 
 /** 内閣テーブル。日付は「YYYY-MM-DD」の文字列で持つ。終了日が null なら現在の内閣。 */
@@ -46,4 +50,75 @@ export const cabinetAppointments = sqliteTable(
     unique("cabinet_appointments_unique").on(t.cabinetId, t.postName, t.personId),
     index("cabinet_appointments_cabinet_idx").on(t.cabinetId, t.sortOrder),
   ],
+);
+
+// ---- 認証（Better Auth）のテーブル。列の形は Better Auth の標準に合わせる ----
+
+/** ユーザーテーブル。role は "user"（一般）か "admin"（管理者）。登録時は必ず "user"。 */
+export const user = sqliteTable("user", {
+  id: text("id").primaryKey(),
+  /** 表示名 */
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+  image: text("image"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  /** 権限。管理者への変更は付与コマンドだけが行う */
+  role: text("role").notNull().default("user"),
+});
+
+/** ログインセッションのテーブル。 */
+export const session = sqliteTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (t) => [index("session_user_idx").on(t.userId)],
+);
+
+/** 認証方法（メールとパスワードなど）のテーブル。パスワードはハッシュ化されて入る。 */
+export const account = sqliteTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: integer("access_token_expires_at", { mode: "timestamp_ms" }),
+    refreshTokenExpiresAt: integer("refresh_token_expires_at", { mode: "timestamp_ms" }),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => [index("account_user_idx").on(t.userId)],
+);
+
+/** 確認用トークンのテーブル（このスプリントでは使わないが Better Auth が必要とする）。 */
+export const verification = sqliteTable(
+  "verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => [index("verification_identifier_idx").on(t.identifier)],
 );
