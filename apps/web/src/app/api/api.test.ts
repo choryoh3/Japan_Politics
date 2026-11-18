@@ -34,3 +34,23 @@ describe("内閣 API", () => {
     expect((await app.request("/api/cabinets/abc")).status).toBe(400);
   });
 });
+
+describe("人物・検索 API", () => {
+  it("検索 API が人物と内閣の候補を返す", async () => {
+    const res = await app.request(`/api/search?q=${encodeURIComponent("石破")}`);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      persons: { id: number; name: string }[];
+      cabinets: unknown[];
+    };
+    expect(body.persons.map((p) => p.name)).toContain("石破茂");
+    const person = await app.request(`/api/persons/${body.persons[0]!.id}`);
+    expect(person.status).toBe(200);
+  });
+
+  it("長すぎる検索語は 400、存在しない人物は 404、不正な人物 ID は 400", async () => {
+    expect((await app.request(`/api/search?q=${"あ".repeat(51)}`)).status).toBe(400);
+    expect((await app.request("/api/persons/999999")).status).toBe(404);
+    expect((await app.request("/api/persons/abc")).status).toBe(400);
+  });
+});

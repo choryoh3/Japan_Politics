@@ -4,7 +4,8 @@
     "current": "現在",
     "source": "出典",
     "backToList": "内閣一覧へ戻る",
-    "dateFormat": "{year}年{month}月{day}日"
+    "dateFormat": "{year}年{month}月{day}日",
+    "themeToggle": "配色を切り替える"
   },
   "cabinets": {
     "title": "歴代内閣",
@@ -36,5 +37,30 @@
     "sourceLabel": "{post}の出典",
     "notFoundTitle": "内閣が見つかりません",
     "notFoundBody": "指定された内閣は存在しないか、削除されました。"
+  },
+  "search": {
+    "placeholder": "人物・内閣を検索",
+    "label": "人物・内閣を検索",
+    "persons": "人物",
+    "cabinets": "内閣",
+    "noResults": "該当する結果はありません",
+    "error": "検索できませんでした。時間をおいてもう一度お試しください。",
+    "loading": "検索中"
+  },
+  "personDetail": {
+    "kanaLabel": "よみがな",
+    "careerTitle": "経歴",
+    "tableLabel": "経歴（役職・所属・就任日・退任日・出典）",
+    "columns": {
+      "post": "役職",
+      "cabinet": "所属",
+      "startDate": "就任日",
+      "endDate": "退任日",
+      "source": "出典"
+    },
+    "sourceLabel": "{post}の出典",
+    "empty": "経歴がまだありません。",
+    "notFoundTitle": "人物が見つかりません",
+    "notFoundBody": "指定された人物は存在しないか、削除されました。"
   }
 }

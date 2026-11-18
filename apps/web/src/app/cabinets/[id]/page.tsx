@@ -127,7 +127,14 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
                 <td className="px-4 py-4 text-body first:pl-0 max-md:w-full max-md:p-0 max-md:text-sm max-md:text-mute">
                   {row.postName}
                 </td>
-                <td className="px-4 py-4 text-lg font-medium max-md:p-0">{row.personName}</td>
+                <td className="px-4 py-4 text-lg font-medium max-md:p-0">
+                  <Link
+                    href={`/persons/${row.personId}`}
+                    className="link-inline inline-flex min-h-11 items-center"
+                  >
+                    {row.personName}
+                  </Link>
+                </td>
                 <td className="px-4 py-4 text-sm text-mute md:whitespace-nowrap max-md:order-last max-md:empty:hidden max-md:w-full max-md:p-0">
                   {tenureText(row, formatDate, (key, values) => t(key, values))}
                 </td>

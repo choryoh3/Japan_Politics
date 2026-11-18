@@ -1,0 +1,124 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import { getPersonProfile } from "@japan-politics/db";
+import { CabinetName } from "@/components/cabinet-name";
+import { EndDate, FormattedDate } from "@/components/formatted-date";
+import { parseCabinetId } from "@/lib/cabinet-id";
+import { getDb } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+/**
+ * 人物ページ。氏名・よみがなと、就任したすべての役職の経歴（出典つき）を就任日の新しい順に表示する。
+ * @param props.params URL の動的部分（人物 ID）
+ */
+export default async function PersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  // 人物 ID も「1 以上の整数」だけを受け付ける（内閣 ID と同じ形式）
+  const personId = parseCabinetId(id);
+  if (personId === null) notFound();
+
+  const profile = await getPersonProfile(getDb(), personId);
+  if (!profile) notFound();
+
+  const t = await getTranslations("personDetail");
+  const tc = await getTranslations("common");
+
+  return (
+    <div>
+      <Link
+        href="/"
+        className="inline-flex min-h-11 items-center text-sm text-link underline underline-offset-4 hover:no-underline"
+      >
+        {tc("backToList")}
+      </Link>
+      <h1 className="mt-4 text-[32px] font-light leading-tight tracking-tight md:text-display-xl">
+        {profile.name}
+      </h1>
+      <p className="mt-2 text-lg text-body">
+        <span className="sr-only">{t("kanaLabel")}: </span>
+        {profile.kana}
+      </p>
+
+      <h2 className="mt-12 text-heading-lg font-light tracking-wide md:text-heading-xl">
+        {t("careerTitle")}
+      </h2>
+      {profile.careers.length === 0 ? (
+        <p className="mt-6 rounded-card bg-surface-card p-8 text-body">{t("empty")}</p>
+      ) : (
+        <div className="mt-6">
+          {/* md 未満は 1 行ずつ縦に積む。md 以上は列幅固定の表 */}
+          <table
+            aria-label={t("tableLabel")}
+            className="block w-full border-collapse text-left md:table md:table-fixed"
+          >
+            <thead className="max-md:sr-only border-b border-ink text-sm text-mute md:table-header-group">
+              <tr className="md:table-row">
+                <th scope="col" className="w-[24%] px-4 py-4 font-medium first:pl-0">
+                  {t("columns.post")}
+                </th>
+                <th scope="col" className="w-[26%] px-4 py-4 font-medium">
+                  {t("columns.cabinet")}
+                </th>
+                <th scope="col" className="w-[20%] whitespace-nowrap px-4 py-4 font-medium">
+                  {t("columns.startDate")}
+                </th>
+                <th scope="col" className="w-[20%] whitespace-nowrap px-4 py-4 font-medium">
+                  {t("columns.endDate")}
+                </th>
+                <th scope="col" className="w-[10%] whitespace-nowrap px-4 py-4 font-medium">
+                  {t("columns.source")}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="max-md:block">
+              {profile.careers.map((career) => (
+                <tr
+                  key={career.id}
+                  className="border-b border-hairline hover:bg-row-hover max-md:flex max-md:flex-wrap max-md:gap-x-6 max-md:py-4"
+                >
+                  <td className="px-4 py-4 text-lg font-medium first:pl-0 max-md:w-full max-md:p-0">
+                    {career.postName}
+                  </td>
+                  <td className="px-4 py-4 max-md:w-full max-md:p-0">
+                    <Link
+                      href={`/cabinets/${career.cabinetId}`}
+                      className="link-inline inline-flex min-h-11 items-center"
+                    >
+                      <CabinetName name={career.cabinetName} />
+                    </Link>
+                  </td>
+                  <td
+                    data-label={t("columns.startDate")}
+                    className="px-4 py-4 tabular-nums md:whitespace-nowrap max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                  >
+                    <FormattedDate date={career.startDate} />
+                  </td>
+                  <td
+                    data-label={t("columns.endDate")}
+                    className="px-4 py-4 tabular-nums md:whitespace-nowrap max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                  >
+                    <EndDate date={career.endDate} />
+                  </td>
+                  <td className="px-4 py-4 max-md:p-0">
+                    <a
+                      href={career.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={career.sourceNote}
+                      aria-label={t("sourceLabel", { post: career.postName })}
+                      className="link-inline inline-flex min-h-11 items-center"
+                    >
+                      {tc("source")}
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

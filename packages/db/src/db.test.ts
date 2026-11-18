@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "./client.ts";
 import { runMigrations } from "./migrate.ts";
-import { getCabinetDetail, listCabinets } from "./queries.ts";
+import { getCabinetDetail, getPersonProfile, listCabinets, searchSuggestions } from "./queries.ts";
 import { seedInitialData } from "./seed.ts";
 
 let dir: string;
@@ -87,5 +87,51 @@ describe("内閣詳細", () => {
 
   it("存在しない ID は null", async () => {
     expect(await getCabinetDetail(db, 999999)).toBeNull();
+  });
+});
+
+describe("人物の経歴", () => {
+  it("加藤勝信の経歴に菅内閣の官房長官と第1次石破内閣の財務大臣があり、就任日の新しい順", async () => {
+    const found = await searchSuggestions(db, "加藤勝信");
+    const profile = await getPersonProfile(db, found.persons[0]!.id);
+    expect(profile?.name).toBe("加藤勝信");
+    expect(profile?.kana).toMatch(/^[ぁ-ゖー]+$/);
+    const pairs = profile!.careers.map((c) => `${c.cabinetName}/${c.postName}`);
+    expect(pairs).toEqual(
+      expect.arrayContaining(["菅内閣/内閣官房長官", "第1次石破内閣/財務大臣"]),
+    );
+    const starts = profile!.careers.map((c) => c.startDate);
+    expect([...starts].sort().reverse()).toEqual(starts);
+    expect(profile!.careers.every((c) => c.sourceUrl.startsWith("http"))).toBe(true);
+  });
+
+  it("存在しない人物は null", async () => {
+    expect(await getPersonProfile(db, 999999)).toBeNull();
+  });
+});
+
+describe("横断検索", () => {
+  it("「石破」で人物の石破茂が見つかる", async () => {
+    const r = await searchSuggestions(db, "石破");
+    expect(r.persons.map((p) => p.name)).toContain("石破茂");
+  });
+  it("よみがな「かとうかつ」で加藤勝信が見つかる。カタカナでも見つかる", async () => {
+    expect((await searchSuggestions(db, "かとうかつ")).persons.map((p) => p.name)).toContain(
+      "加藤勝信",
+    );
+    expect((await searchSuggestions(db, "カトウカツ")).persons.map((p) => p.name)).toContain(
+      "加藤勝信",
+    );
+  });
+  it("「岸田」で内閣の第1次岸田内閣が見つかる", async () => {
+    const r = await searchSuggestions(db, "岸田");
+    expect(r.cabinets.map((c) => c.name)).toContain("第1次岸田内閣");
+  });
+  it("該当なし・空白・LIKE の特殊文字は安全に空で返る", async () => {
+    for (const q of ["zzzzz", "   ", "%", "_"]) {
+      const r = await searchSuggestions(db, q);
+      expect(r.persons).toHaveLength(0);
+      expect(r.cabinets).toHaveLength(0);
+    }
   });
 });
