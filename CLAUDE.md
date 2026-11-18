@@ -115,7 +115,7 @@
 
 - 検証スクリプトの実行には Python 3 が必要（`python3` → `python` → `py` の順に、実際に動くものを使う）。Windows の Microsoft Store スタブは動かないので注意。Python が無いとフックの自動検証は警告だけでスキップされる。
 - Playwright MCP（`npx` で起動）の利用には Node.js が必要。初回は MCP サーバーの有効化の承認が出る。
-- Context7 MCP はリモート接続（HTTP）で、認証は OAuth 方式。初回は `/mcp` を実行して認証する。トークンは各自の環境に保存され、リポジトリには含まれない。API キーは `.mcp.json` や他のファイルに書かず、コミットしない。
+- Context7 MCP はリモート接続（HTTP）で、認証は API キー方式（`Authorization: Bearer`）。キーは環境変数 `CONTEXT7_API_KEY` で渡し（`.mcp.json` は `${CONTEXT7_API_KEY}` を参照するだけ）、`.mcp.json` や他のファイルに書かず、コミットしない。ローカルでは OS のユーザー環境変数に設定し、クラウドでは環境設定の環境変数に設定する（手順は `docs/cloud-setup.md`）。
 - MCP を追加するときは、バージョンを固定し（`npx` 起動のもの）、担当エージェントの `tools` / `mcpServers` と本ファイルの役割表を更新する。書き込み権限を持つ MCP（決済・DB など）は、接続先をテスト用・開発用に限定する。
 - UI評価ありのプロジェクトで `docs/design/tokens.md` が未整備のうちは、`designer` を呼ぶ前にユーザーへ資料の提供を依頼する（または `designer` の「トークン草案モード」を使い、ユーザーが承認する）。
 
