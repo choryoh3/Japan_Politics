@@ -419,3 +419,119 @@ Both are styling problems only, so this goes back to designer.
 
 VERDICT: FAIL
 RETURN_TO: designer
+
+---
+
+## 試行 5
+
+VERDICT: PASS
+RETURN_TO: none
+
+## Evaluator 判定: 合格 (Sprint 1 / 試行 5)
+
+Sprint 1 passes on this attempt. All four attempt-4 failures are fixed. All 15 contract items still hold, and every design score is 7/10 or higher. The designer's three self-declared unchecked points and the side effects of `overflow-x: clip` are verified below.
+
+### 前回（試行 4）不合格項目の再テスト（最初に確認）
+1. [x] **Focus ring on the blue band** — 合格
+   - 手順: 1280px, light and dark. Pressed Tab once on `/cabinets/5` (focus goes to 「内閣一覧へ戻る」) and once on `/` (focus goes to 「第2次高市内閣」). Also checked `/` at 375 in dark.
+   - 観測: In all four cases the computed outline is `solid 2px rgb(255,255,255)` on `#0070d1`. That is 4.95:1, above the 3:1 needed.
+   - Screenshots: `t5-focus-light-detail5.png`, `t5-focus-dark-list.png` and `t5-kbd-dark-375-list-row1.png` all show a clear white rounded ring.
+   - Outside the band, the 出典 links keep the `#53b1ff` ring on black, as intended.
+2. [x] **在任 dates no longer break mid-date** — 合格
+   - 手順: Checked all 9 cabinets (`/cabinets/1`–`/9`, not only 1/4/5/7) at 768, 1024 and 1280, in light and dark.
+   - 観測: Every 在任 cell is on one line (Range rects).
+   - With nowrap applied, no text runs past its cell's right edge.
+   - Every header and its cells keep the same `left` position (0 mismatches).
+   - In the 768 dark screenshot, 「2023年12月14日から」 sits on one line just before 「出典」.
+   - 一覧の発足日・終了日 (the designer's open question about 開始日): no wrapping at 768, 1024 or 1280. 「現在」 reports two rects, but that is the pill's border box, not a line break; on screen it is one line.
+3. [x] **Text contrast on the band** — 合格
+   - 観測: The `dt` labels (発足日 and 終了日, 16px, weight 300) and the 375 list row-1 `td::before` labels (内閣総理大臣 / 発足日 / 終了日, 14px, weight 300) are all `rgb(255,255,255)` on `#0070d1`: 4.95:1, above 4.5:1. Same in light and dark.
+   - The values (`dd`) are weight 500, so labels and values are still told apart by weight.
+4. [x] **Seam at the band's bottom edge** — 合格
+   - Band bottom is at 356.69px (at 375px it falls at a whole pixel). In the pixel row y=356, the full viewport width is a single colour: light (64,148,220), dark (0,84,156). That is a uniform anti-aliased edge.
+   - At 375 there is no anti-aliased row at all. The attempt-4 difference between the content width and the area outside it is gone.
+5. [x] **Regressions** — see the next sections. All pass.
+
+### Designer の未確認項目と `overflow-x: clip` の副作用
+- **Horizontal scroll:**
+  - Checked `/` and `/cabinets/1`–`/9` at 375, 768, 1024 and 1280, in light and dark (80 page loads). `documentElement.scrollWidth` equals the viewport width every time, and no element is outside the viewport.
+  - `scrollTo(2000,0)` and a horizontal wheel scroll both leave `scrollX` at 0. CDP `Page.getLayoutMetrics` reports a content width of 1280 at 1280.
+  - In a mobile emulation context (375, `isMobile`), `visualViewport.scale` is 1 and `innerWidth` is 375, so the page is not zoomed out.
+- **A harmless quirk:** Playwright's `fullPage` screenshot of the detail pages comes out wider than the viewport (2512px wide at 1280). The extra area is plain canvas colour, and users cannot scroll to it.
+- **sticky:** `apps/web/src/` contains no `sticky`, so there is nothing to affect.
+- **Keyboard scrolling:**
+  - On `/cabinets/5` (23 rows) at 375 and 1280, Tab moves through 「内閣一覧へ戻る」 and then all 23 「出典」 links in order. The page scrolls down vertically to follow focus, and `scrollX` stays 0 throughout.
+  - Enter on a focused cabinet link opens the right detail page (「第1次高市内閣」).
+
+### スプリント契約 (15/15 合格)
+- [x] 1. `docs/project.md` 「初期データ・準備」 lists `pnpm install`, `pnpm db:migrate` and `pnpm db:seed` (and `db:setup` as the one-step form).
+- [x] 2. With a scratch DB `eval-s1-t5.db` that did not exist beforehand (`DATABASE_URL` pointed at it), `db:migrate`, `db:seed` and `db:seed` again all exited with code 0. I did not re-run `pnpm install`; it was run in attempt 1.
+- [x] 3. Seeding twice adds no rows.
+  - Scratch DB: cabinets 9, persons 87, cabinet_appointments 177, unchanged after the second seed.
+  - Real `local.db`: I ran `pnpm db:seed` twice (both exit 0). The `/` list had 9 cabinets before and after.
+- [x] 4. `/` shows the h1 「歴代内閣」 and 9 rows.
+- [x] 5. The list includes 菅内閣, 第1次岸田内閣 and 第1次石破内閣.
+- [x] 6. Every row has its 4 cells (name, prime minister, start date, end date), none empty.
+- [x] 7. 「現在」 appears only once, in row 1 (第2次高市内閣).
+- [x] 8. Rows are in descending start-date order (2026-02-18 → 2020-09-16), and the last row is 菅内閣.
+- [x] 9. I clicked all 9 names. They opened `/cabinets/9` … `/1`, and every h1 matched the clicked name exactly.
+- [x] 10. The 菅内閣 page shows 発足日 2020年9月16日 and 終了日 2021年10月4日.
+- [x] 11. 第1次石破内閣 has 19 roster rows, with no empty 役職 or 氏名.
+- [x] 12. For all 9 cabinets, row 1 is 内閣総理大臣 and row 2 is 内閣官房長官.
+- [x] 13. 第1次石破内閣 has the row 内閣官房長官 / 林芳正.
+- [x] 14. For all 9 cabinets, every row has exactly one 「出典」 link with an href starting `https://www.kantei.go.jp/`. Rows failing this: 0.
+- [x] 15. Not-found pages:
+  - `/cabinets/99999`, `0`, `abc`, `-1`, `%3Cscript%3E` and `1.5` all return 404 with 「内閣が見つかりません」 and a link back to `/`.
+  - Clicking that link on `/cabinets/99999` leads to `/` with the h1 「歴代内閣」.
+
+### 回帰確認
+This is the first sprint, so there are no earlier contracts to re-test. I re-ran all 15 items above. The checks from attempts 1–4 (出典 column position on every row of all 9 cabinets, no horizontal scroll, the h1 and list wraps) also still pass.
+
+### エッジケース・健全性
+- **Checks I ran myself:** `pnpm lint` exit 0, `pnpm typecheck` exit 0, `pnpm test` all passed (db 8, web 6). I did not run `pnpm build`, so as not to disturb the running dev server.
+- **Console:** the only errors in this session are the expected 404s from the not-found pages. There were 0 warnings.
+  - The log also has HMR WebSocket `ERR_CONNECTION_REFUSED` entries. They were recorded before my session started (around the dev-server restart at 11:53), and none occurred during my evaluation.
+- **Network:** no 5xx. All 4xx responses are the intended 404s.
+- **API:**
+  - `/api/cabinets/abc` returns 400 `{"error":"内閣 ID が不正です"}`.
+  - `/api/cabinets/99999` returns 404 `{"error":"内閣が見つかりません"}`.
+  - No stack trace or secret is exposed. `lang="ja"`.
+
+### デザイン評価（閾値 7/10）
+- **デザインの質: 8/10.**
+  - The detail page has two chapters: the blue band (white h1 at weight 300, weight-300 labels and weight-500 values on a hairline) and then the roster on the white or black canvas. The hierarchy is clear.
+  - All text on the band is now at least 4.95:1 (`t5-light-1280-c5.png`, `t5-mobile375-c5-viewport.png`).
+- **オリジナリティ: 7/10.**
+  - The chapter structure alternates blue and canvas, following DESIGN.md, and the current cabinet stands out as a blue band (`t5-dark-1280-list.png`, `t5-light-375-list.png`).
+  - 0 AI-slop signs apply: no gradients, no grid of rounded cards, no stock icons.
+- **クラフト: 7/10.**
+  - Fixed: the mid-date break, the band seam and horizontal scroll are all resolved, and column alignment is exact at every width.
+  - Remaining minor issues:
+    - At 768 on the list, row 1's name 「第2次高市内閣」 runs 0.6px into the next cell's padding and is close to 高市早苗 (about 15px apart).
+    - At 375 on the not-found page, the text breaks mid-word as 「削除されま / した。」.
+- **機能性: 8/10.**
+  - The focus ring is clear on every background.
+  - All main tasks work by keyboard alone (Tab and Enter).
+  - Touch targets are 44px (`min-h-11`).
+  - No horizontal scroll.
+
+### 改善提案（任意・次のスプリントへ）
+- In `globals.css`, add a `scroll-margin` (for example 16px) to `:focus-visible` elements.
+  - Why: when Tab moves focus to an off-screen 出典 link, the browser scrolls only far enough to show the link itself. The bottom of the ring is cut off at the viewport edge (`t5-kbd-dark-1280-c5.png`).
+- On the list at 768, widen the 内閣名 column a little or lower the row-1 name size one step at md, to give 「第2次高市内閣」 more room.
+- Apply `word-break: auto-phrase` or a manual line break to the not-found description text.
+
+### 評価で残したもの
+- **Scratch DB:** `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/eval-s1-t5.db`
+- **API response file:** `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/api.out`
+- **Real `local.db`:** `pnpm db:seed` ran twice (contract item 3). Row counts did not change.
+- **Screenshots,** all in `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/`:
+  - `t5-{light|dark}-{375|768|1024|1280}-{list|c5|c9|nf}.png`
+  - `t5-focus-{light|dark}-{list|detail5}.png`
+  - `t5-kbd-dark-{375|1280}-c5.png`, `t5-kbd-dark-375-list-row1.png`, `t5-kbd-dark-375-list-row2.png`
+  - `t5-mobile375-c5-viewport.png`
+- **Repository:** I edited no code or docs and wrote no images into the repository. `git status` shows only the designer's 3 changed files (`apps/web/src/app/cabinets/[id]/page.tsx`, `apps/web/src/app/globals.css`, `apps/web/src/app/page.tsx`). Playwright's logs go to `.playwright-mcp/`, which is gitignored.
+- **Browser:** closed. The dev server is still running.
+
+VERDICT: PASS
+RETURN_TO: none
