@@ -99,6 +99,7 @@
 - Context7 を使うのは `generator` のみ。他のエージェントには許可しない（ツール定義によるコンテキスト消費を避けるため）。
 - Serena（既存コードのシンボル単位の探索・編集）を使うのは `generator` とメインセッションのみ。`evaluator`（コードを直さない）、`designer`、`planner` には許可しない。
   - Serena は `serena_repl` 1ツールに機能が集約され、ツール名では読み取り / 書き込みを区別できない。シェル実行は `.serena/project.yml` の `excluded_apis` で無効にし、コマンド実行は Bash と `settings.json` の権限ルールに任せる。
+  - REPL は `settings.json` の `Read` 拒否ルール（`.env` など）を素通りできるため、PreToolUse フック（`scripts/block_serena_secrets.py`）が `serena_repl` のコードを実行前に検査し、機密ファイルへの参照や `open()` / `import os` などの迂回手段を拒否する。これは「うっかり」を防ぐ対策で、意図的な迂回までは防げない。
   - 技術スタックが決まったら、`.serena/project.yml` の `language_servers` を合わせる。
 
 ## ハーネス（自動チェック）

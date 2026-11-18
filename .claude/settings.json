@@ -41,6 +41,17 @@
     "serena"
   ],
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__serena__serena_repl",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "for PY in python3 python py; do if \"$PY\" -c \"\" >/dev/null 2>&1; then exec \"$PY\" \"$CLAUDE_PROJECT_DIR/scripts/block_serena_secrets.py\"; fi; done; echo \"Python 3 が見つからないため serena_repl の検査ができません。実行を拒否しました\" >&2; exit 2"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",

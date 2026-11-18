@@ -63,6 +63,7 @@ mcpServers:
 - 既存コードの規約確認、シンボル・参照の検索、影響範囲の把握には Serena（`serena_repl`）を使う。最初に `initial_instructions` を呼んで、セッション ID と使い方を確認する
 - 主に使うのは `s.lsp`（`find_symbol` / `find_referencing_symbols` / `get_symbols_overview` / `rename_symbol`）と `s.edit`（シンボル単位の編集）。ファイル全体を読む前に、まずシンボル概要で絞り込む
 - シェル実行（`s.shell`）は無効。コマンドは Bash で実行する
+- `serena_repl` に渡すコードは `s.fs` / `s.lsp` / `s.edit` / `s.mem` の API だけで書く。`open()`、`import os`、`Path()`、環境変数へのアクセス、機密ファイルのパスはフックに拒否される（拒否されたら別の書き方を探さず、Serena の API で書き直す）
 - `.env*` を読まない・シークレットを扱わない、git の commit / push をしない、というルールは Serena 経由でも同じく守る
 - Serena が使えない場合は Read / Grep / Edit で代替し、完了報告の「技術的な決定事項」に「Serena 未使用」と書く
 
