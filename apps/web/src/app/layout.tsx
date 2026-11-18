@@ -32,7 +32,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang={locale} className={notoSansJp.variable}>
       <body>
         <NextIntlClientProvider>
-          <header className="bg-canvas-dark text-on-dark">
+          <header className="border-b border-hairline-dark bg-canvas-dark text-on-dark">
             <div className="mx-auto flex h-12 max-w-7xl items-center px-6 text-lg font-medium tracking-wider md:px-12">
               {t("appName")}
             </div>

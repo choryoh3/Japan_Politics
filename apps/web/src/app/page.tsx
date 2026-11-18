@@ -16,35 +16,54 @@ export default async function HomePage() {
 
   return (
     <div>
-      <h1 className="text-[32px] font-light leading-tight tracking-tight md:text-display-xl">
+      <h1 className="text-[32px] font-light leading-tight tracking-tight [text-wrap:balance] md:text-display-xl">
         {t("title")}
       </h1>
       <p className="mt-4 max-w-[40em] text-base text-body md:text-lg">{t("description")}</p>
       {cabinets.length === 0 ? (
         <p className="mt-12 rounded-card bg-surface-card p-8 text-body">{t("empty")}</p>
       ) : (
-        <div className="mt-12 overflow-x-auto">
-          <table className="w-full min-w-[640px] border-collapse text-left">
-            <thead className="border-b border-ink text-sm text-mute">
-              <tr>
-                <th scope="col" className="px-4 py-4 font-medium tracking-wider first:pl-0">
+        <div className="mt-12">
+          {/* md 未満は 1 行ずつ縦に積む（横スクロールに頼らない）。md 以上は列幅固定の表 */}
+          <table
+            aria-label={t("tableLabel")}
+            className="block w-full border-collapse text-left md:table md:table-fixed"
+          >
+            <thead className="max-md:sr-only border-b border-ink text-sm text-mute md:table-header-group">
+              <tr className="md:table-row">
+                <th
+                  scope="col"
+                  className="w-[34%] whitespace-nowrap px-4 py-4 font-medium tracking-wider first:pl-0"
+                >
                   {t("columns.name")}
                 </th>
-                <th scope="col" className="px-4 py-4 font-medium tracking-wider first:pl-0">
+                <th
+                  scope="col"
+                  className="w-[26%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+                >
                   {t("columns.primeMinister")}
                 </th>
-                <th scope="col" className="px-4 py-4 font-medium tracking-wider first:pl-0">
+                <th
+                  scope="col"
+                  className="w-[20%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+                >
                   {t("columns.startDate")}
                 </th>
-                <th scope="col" className="px-4 py-4 font-medium tracking-wider first:pl-0">
+                <th
+                  scope="col"
+                  className="w-[20%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+                >
                   {t("columns.endDate")}
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="max-md:block">
               {cabinets.map((cabinet) => (
-                <tr key={cabinet.id} className="border-b border-hairline hover:bg-row-hover">
-                  <td className="px-4 py-4 first:pl-0">
+                <tr
+                  key={cabinet.id}
+                  className="border-b border-hairline hover:bg-row-hover max-md:flex max-md:flex-wrap max-md:gap-x-6 max-md:py-4"
+                >
+                  <td className="px-4 py-4 first:pl-0 max-md:w-full max-md:p-0">
                     <Link
                       href={`/cabinets/${cabinet.id}`}
                       className="link-inline inline-flex min-h-11 items-center text-lg font-medium"
@@ -52,11 +71,22 @@ export default async function HomePage() {
                       {cabinet.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-4 first:pl-0">{cabinet.primeMinisterName}</td>
-                  <td className="px-4 py-4 first:pl-0">
+                  <td
+                    data-label={t("columns.primeMinister")}
+                    className="px-4 py-4 max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)] max-md:w-full"
+                  >
+                    {cabinet.primeMinisterName}
+                  </td>
+                  <td
+                    data-label={t("columns.startDate")}
+                    className="px-4 py-4 max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                  >
                     <FormattedDate date={cabinet.startDate} />
                   </td>
-                  <td className="px-4 py-4 first:pl-0">
+                  <td
+                    data-label={t("columns.endDate")}
+                    className="px-4 py-4 max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                  >
                     <EndDate date={cabinet.endDate} />
                   </td>
                 </tr>

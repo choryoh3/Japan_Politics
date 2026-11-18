@@ -17,5 +17,11 @@ export function FormattedDate({ date }: { date: string }) {
  */
 export function EndDate({ date }: { date: string | null }) {
   const t = useTranslations("common");
-  return date === null ? <span>{t("current")}</span> : <FormattedDate date={date} />;
+  return date === null ? (
+    <span className="inline-flex items-center rounded-full border border-link px-3 text-sm font-medium text-link">
+      {t("current")}
+    </span>
+  ) : (
+    <FormattedDate date={date} />
+  );
 }

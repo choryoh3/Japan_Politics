@@ -10,6 +10,7 @@
     "title": "歴代内閣",
     "description": "菅内閣以降の歴代内閣と、閣僚名簿を確認できます。",
     "empty": "内閣のデータがまだありません。",
+    "tableLabel": "歴代内閣の一覧",
     "columns": {
       "name": "内閣名",
       "primeMinister": "内閣総理大臣",
@@ -22,6 +23,7 @@
     "startDate": "発足日",
     "endDate": "終了日",
     "rosterTitle": "閣僚名簿",
+    "tableLabel": "閣僚名簿（役職・氏名・在任・出典）",
     "columns": {
       "post": "役職",
       "name": "氏名",

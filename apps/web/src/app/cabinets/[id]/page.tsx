@@ -56,7 +56,7 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
       <Link href="/" className="link-inline inline-flex min-h-11 items-center text-sm">
         {tc("backToList")}
       </Link>
-      <h1 className="mt-4 text-[32px] font-light leading-tight tracking-tight md:text-display-xl">
+      <h1 className="mt-4 text-[32px] font-light leading-tight tracking-tight [text-wrap:balance] md:text-display-xl">
         {detail.name}
       </h1>
       <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-1 text-body">
@@ -77,33 +77,54 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
       <h2 className="mt-16 text-heading-lg font-light tracking-wide md:text-heading-xl">
         {t("rosterTitle")}
       </h2>
-      <div className="mt-6 overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-left">
-          <thead className="border-b border-ink text-sm text-mute">
-            <tr>
-              <th scope="col" className="px-4 py-4 font-medium tracking-wider first:pl-0">
+      <div className="mt-6">
+        {/* md 未満は 1 行ずつ縦に積む（横スクロールに頼らない）。md 以上は列幅固定の表 */}
+        <table
+          aria-label={t("tableLabel")}
+          className="block w-full border-collapse text-left md:table md:table-fixed"
+        >
+          <thead className="max-md:sr-only border-b border-ink text-sm text-mute md:table-header-group">
+            <tr className="md:table-row">
+              <th
+                scope="col"
+                className="w-[30%] whitespace-nowrap px-4 py-4 font-medium tracking-wider first:pl-0"
+              >
                 {t("columns.post")}
               </th>
-              <th scope="col" className="px-4 py-4 font-medium tracking-wider first:pl-0">
+              <th
+                scope="col"
+                className="w-[24%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+              >
                 {t("columns.name")}
               </th>
-              <th scope="col" className="px-4 py-4 font-medium tracking-wider first:pl-0">
+              <th
+                scope="col"
+                className="w-[30%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+              >
                 {t("columns.tenure")}
               </th>
-              <th scope="col" className="px-4 py-4 font-medium tracking-wider first:pl-0">
+              <th
+                scope="col"
+                className="w-[16%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+              >
                 {t("columns.source")}
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="max-md:block">
             {detail.roster.map((row) => (
-              <tr key={row.id} className="border-b border-hairline hover:bg-row-hover">
-                <td className="px-4 py-4 text-body first:pl-0">{row.postName}</td>
-                <td className="px-4 py-4 text-lg font-medium">{row.personName}</td>
-                <td className="px-4 py-4 text-sm text-mute">
+              <tr
+                key={row.id}
+                className="border-b border-hairline hover:bg-row-hover max-md:flex max-md:flex-wrap max-md:items-center max-md:justify-between max-md:gap-x-4 max-md:py-4"
+              >
+                <td className="px-4 py-4 text-body first:pl-0 max-md:w-full max-md:p-0 max-md:text-sm max-md:text-mute">
+                  {row.postName}
+                </td>
+                <td className="px-4 py-4 text-lg font-medium max-md:p-0">{row.personName}</td>
+                <td className="px-4 py-4 text-sm text-mute empty:hidden max-md:order-last max-md:w-full max-md:p-0">
                   {tenureText(row, formatDate, (key, values) => t(key, values))}
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-4 py-4 max-md:p-0">
                   <a
                     href={row.sourceUrl}
                     target="_blank"
