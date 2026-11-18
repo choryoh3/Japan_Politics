@@ -121,4 +121,24 @@
 
 ## プロジェクト固有のルール
 
-（ここに追記する。例: 技術スタックの制約、命名規約、評価上の例外。評価上の例外は `docs/project.md` の「評価上の注意」にも書くこと）
+### 技術スタック（各公式ドキュメント準拠。API は Context7 で確認してから書く）
+
+- 構成: pnpm monorepo（pnpm 10、`packageManager` で固定）
+- フロント: Next.js（App Router）、TypeScript strict、Tailwind CSS、shadcn/ui、next-intl（文言は全て辞書化。直書き禁止）、TanStack Query
+- バックエンド: Hono（Next.js の Route Handler に同居）、zod（入出力の検証）
+- DB / 認証: Turso（libSQL）+ Drizzle ORM、Better Auth
+- 品質: Vitest、ESLint + Prettier、GitHub Actions
+- 配備: Vercel（Git 連携）
+
+### コーディング規約
+
+- 全ての関数・型・コンポーネントに JSDoc を付ける（何をするか、引数、戻り値を平易な日本語で）。
+- 優しく読みやすいコードを優先する。名前は意味が分かるものにし、1関数1責務、早期 return、過度な抽象化はしない。
+- コメントは「なぜそうしたか」を中心に、初学者にも分かる言葉で書く。
+- `any` と `@ts-ignore` は使わない。外部入力は zod で検証してから使う。
+
+### 環境の注意
+
+- ローカル・クラウドの DB は `DATABASE_URL=file:./local.db`（ファイル DB）で動かす。Turso 接続は `docs/cloud-setup.md` の手順で、ホストを Allowed domains に追加してから。
+- シークレット（`TURSO_AUTH_TOKEN`、`BETTER_AUTH_SECRET`）は環境変数でのみ渡し、`.env.example` には名前だけ書く。
+- 評価上の例外は `docs/project.md` の「評価上の注意」にも書くこと。
