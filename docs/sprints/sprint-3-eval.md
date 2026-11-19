@@ -536,3 +536,190 @@ RETURN_TO: generator
 
 VERDICT: FAIL
 RETURN_TO: generator
+
+---
+
+## 試行 4
+
+VERDICT: FAIL
+RETURN_TO: generator
+
+## Evaluator 判定: 不合格 (Sprint 3 / 試行 4)
+
+All 15 contract items pass, and so does everything that failed in attempt 3. The sprint still fails: two new gaps in the name check let me create a person whose heading looks empty, and two people whose names look the same. Both are the kind of defect you said counts as a functional failure.
+
+### 不合格理由（重大な順）
+1. **A person with an empty heading can be created, and a "same-looking" duplicate is possible: U+FFF9–U+FFFB and U+FFFC.**
+   - **Steps (production build on 3100, throwaway DB, admin):**
+     - Open `/persons/new`, enter `<U+FFFB>` as the name and `ひょうかがめん` as the reading, press 保存.
+     - It moves to `/persons/210`. The h1 text is `<U+FFFB>` and its drawn width is 0px.
+     - The blue band shows only the reading (`s3t4-ui-fffb-created.png`, `s3t4-fff9-empty-heading.png`).
+   - **Same result through the API (POST `/api/persons` returns 201):**
+     - `<U+FFF9>` (id 195), `<U+FFFA>` (id 196) and `<U+FFFC>` (id 208) each get an h1 with width 0.
+     - `評価T4` (id 197) and `評価T4<U+FFF9>` (id 198) are both created and look identical (`s3t4-h1-197.png` and `s3t4-h1-198.png`). `評価T4<U+FFFB>` (id 199) behaves the same.
+   - **Expected:** an empty-looking name returns 400 `nameRequired`; a hidden character inside a name returns 400 `nameInvalidChar`.
+   - **Which requirement it breaks:** the required name (「氏名（必須）」 under 実装する機能) and the duplicate-name rule (`nameDuplicate`). Contract item 11 is also affected: the heading is meant to show the name that was entered.
+   - **Likely cause:**
+     - In `packages/db/src/person-input.ts`, `INVISIBLE_CHAR_PATTERN` is `[\p{Default_Ignorable_Code_Point}⠀]`.
+     - The Unicode standard's definition of Default_Ignorable explicitly leaves out U+FFF9–FFFB, U+13430–1343F and the Arabic prefix signs (Prepended_Concatenation_Mark). So these are format characters (category Cf) that are not "ignorable".
+     - U+FFFC is in the symbol category (So), so it is not caught either.
+   - **Fix:**
+     - Change `INVISIBLE_CHAR_PATTERN` and the class removed in `hasVisibleChar` to `[\p{Default_Ignorable_Code_Point}\p{Cf}⠀￼]`.
+     - Adding all of Cf is safe: the ZWJ and tag characters inside valid emoji are already removed by `RGI_EMOJI_PATTERN` first.
+     - Add Vitest cases expecting 400 for: `<U+FFF9>`, `<U+FFFA>`, `<U+FFFB>`, `<U+FFFC>`, `評価<U+FFF9>`.
+2. **Different whitespace makes names that look the same.**
+   - **Steps (API on 3100, each returns 201):**
+     - `評価 空白T4` (U+0020, id 191)
+     - `評価<U+00A0>空白T4` (id 192)
+     - `評価  空白T4` (two U+0020, id 193)
+   - All three draw an h1 exactly 278.9px wide. HTML collapses runs of spaces and draws a non-breaking space like a normal one, so they cannot be told apart (`s3t4-h1-192.png` and `s3t4-h1-193.png`).
+   - `評価<U+2028>行T4` (id 201) and `評価<U+2029>段T4` (id 202) are also created. They display like a space, even though a newline in a name is rejected.
+   - **Expected:** names that look the same give 409 `nameDuplicate` (or the input is rejected). Line and paragraph separators are rejected like a newline.
+   - **Fix (in `normalizeName` or before the check):**
+     - Reject U+2028 and U+2029 like a newline (`nameInvalidChar`).
+     - Replace whitespace other than U+3000 (e.g. U+00A0, U+2000–U+200A, U+202F, U+205F) with U+0020, then collapse runs of U+0020 into one.
+     - Keep the full-width space U+3000 as it is. It is common between family and given names, is visibly wider, and HTML does not collapse it.
+     - Alternatively, reject non-standard spaces and consecutive spaces with 400. Either way, add Vitest cases.
+
+### 前回の不合格項目の再テスト（すべて合格。API と画面の両方、本番 3100）
+1. **Invisible-only names**, all 400 `nameRequired` through the API, PUT included. On screen each shows 「氏名を入力してください」 and nothing is saved:
+   - `<U+3164>`, `<U+3164><U+3164>`, `<U+FFA0>`, `<U+2800>`, `<U+034F>`, `<U+FE0F>` alone, `<U+0301>` alone, `<U+115F>`, and also `<U+1160>`.
+2. **Names that could make a lookalike duplicate**, all 400 `nameInvalidChar`. On screen each shows 「氏名に使えない文字（制御文字・改行・見えない文字など）が含まれています」:
+   - `評価<U+FE0E>`, `評価<U+180B>`, `評価<U+E0100>`, `評価😀<U+E0061>`, `評価😀<U+200D>😀`, `評価😀<U+FE0F>`.
+3. **NFC duplicates (two names that become identical after standard Unicode normalization), both directions**:
+   - Create `評価が` first (201), then send `評価か<U+3099>`: 409.
+   - Create `評価き<U+3099>` first (201), then send `評価ぎ`: 409.
+   - Through the screen, `評価か<U+3099>` shows 「同じ氏名の人物が既に登録されています」. PUT gives 409 too.
+4. **These return 201:**
+   - `👩🏽<U+200D>💻`, the family emoji, the England flag, 🏳️‍🌈, 🏴‍☠️, 👁️‍🗨️, 🇯🇵, `%_\`, and a 50-character name. A 51-character name returns 400 `nameTooLong`.
+   - `評価髙橋﨑山齋藤邊渡ヶ々ーカタカナがぎぐ` returns 201.
+5. **Earlier rejected values are still 400:**
+   - `<U+200B>`, `<U+202E>`, `<U+00AD>`, NUL, BEL, newline, `<U+0085>`.
+   - In the memo, `<U+200B>` and `<U+3164>` give 400 `memoInvalidChar`; a memo with newlines and tabs gives 201.
+6. **PUT and seed data:**
+   - PUT applies the same checks: `<U+3164>`, `<U+0301>` and `評価PUT<U+FE0E>` give 400, the NFC duplicate gives 409, a valid name gives 200.
+   - I re-saved all 87 seed people with PUT using their current values: all 87 returned 200, and both the person page and the edit page loaded with 200 for every one.
+7. **Browser support (RGI_Emoji):**
+   - On 3100, `/persons/new` and `/persons/2/edit` produced no console messages at all and no page errors (HeadlessChrome 153).
+   - On dev 3000, `new RegExp("\\p{RGI_Emoji}","gv")` builds without error.
+   - On dev 3000 I could not open the admin-only form pages: that needs a registered account, which would mean writing to `local.db`.
+
+### スプリント契約（本番ビルド 3100、使い捨て DB）
+- [x] 1. **Logged out, the header shows 「ログイン」** — pass (checked on `/` and `/persons/2`).
+- [x] 2. **Registering logs you in** — pass. After registering with an 8-character password, it moves to `/`; the header shows 「評価UI一般T4」 and 「ログアウト」.
+- [x] 3. **A 7-character password is rejected** — pass. 「パスワードは8文字以上にしてください」 is shown and the header stays 「ログイン」.
+- [x] 4. **Logging out restores the header** — pass (back to 「ログイン」 and 「新規登録」).
+- [x] 5. **Admin grant command, registered address** — pass. It printed 「eval-admin4@s3t4.example.test を管理者にしました」 and exited with code 0.
+- [x] 6. **Admin header** — pass (「人物を追加」 is shown).
+- [x] 7. **Admin grant command, unregistered address** — pass. It printed 「該当するアカウントがありません」 and exited with code 2. With no argument it exits with code 1.
+- [x] 8. **Logged-out and regular users see no edit controls** — pass.
+  - In both states, 「編集」, 「削除」 and 「人物を追加」 appear 0 times.
+  - A regular user opening `/persons/new` or `/persons/2/edit` sees 「この操作は管理者だけができます」.
+  - A logged-out user opening `/persons/new` is sent to `/login`.
+- [x] 9. **Logged-out API calls** — pass (POST, PUT and DELETE all return 401).
+- [x] 10. **Regular-user API calls** — pass.
+  - POST, PUT and DELETE all return 403, and no person is added (searching the name returns 0 hits).
+  - Sending `"role":"admin"` at registration still gives `role: user`.
+- [x] 11. **Adding a person** — pass. Saving 「評価花子T4」 moves to `/persons/211` and the h1 matches.
+- [x] 12. **A katakana reading is rejected** — pass. 「よみがなはひらがなで入力してください」 is shown, the page does not move, and nothing is added.
+- [x] 13. **Renaming shows everywhere** — pass. `/persons/2` renamed to 「加藤勝信評価改名T4」 shows in its h1 and in the `/cabinets/7` member list. I then changed it back.
+- [x] 14. **Data survives a restart** — pass. After stopping and restarting 3100, the new name, id 211 and the admin's 「人物を追加」 were all still there.
+- [x] 15. **Deleting a person** — pass.
+  - The confirmation dialog is a true modal (`:modal`); its text is 「評価花子T4を削除します。この操作は取り消せません。」.
+  - 「削除する」 returns to `/`. Searching 「評価花子」 shows 「該当する結果はありません」, and `/persons/211` returns 404.
+  - Deleting a person who has a career record (person 2) returns 409 `hasCareers`.
+
+### 回帰確認（dev 3000、`local.db` は読み取りのみ）
+- **Cabinet list:** 9 rows. 「現在」 appears only on row 1 (第2次高市内閣).
+- **Suga cabinet dates:** 2020年9月16日 / 2021年10月4日.
+- **`/cabinets/6`:** 19 rows. Row 1 is 内閣総理大臣 (石破茂), and 林芳正 is included. Every row has exactly one source link.
+- **`/persons/2`:** 「加藤勝信」, with 5 career rows.
+- **Search:**
+  - 「かとうかつ」 suggests 加藤勝信.
+  - 「岸田」 then ↑ and Enter goes to `/cabinets/2`.
+  - 「zzzzz」 shows 「該当する結果はありません」.
+- **Not found:** `/cabinets/99999` and `/persons/abc` return 404 with their own headings.
+
+### エッジケース・健全性
+- **Quality gates (I ran them myself):** lint 0, typecheck 0, tests pass (db 30/30, web 14/14), build 0.
+- **Console:**
+  - The form pages are clean.
+  - The only errors are expected resource-load messages: the 409 on a duplicate name and the 404 on the not-found pages.
+- **Server logs:** no 5xx and no exceptions.
+- **Secrets:** nothing leaked.
+- **Other findings (not reasons for failure; improvement suggestions):**
+  - **Old-form kanji are converted.** NFC turns compatibility ideographs into the standard form: `評価<U+FA19>T4` (神, old form) is saved as `評価<U+795E>T4`, and the standard form then gets 409. The old glyph shape (示-hen) can be lost from the heading.
+  - **Valid kanji variant sequences are rejected.** A registered Ideographic Variation Sequence, such as `辻<U+E0100>`, also returns 400. If people need kanji variants (異体字) in names, the spec should decide how to handle them.
+  - **Broken character data is replaced.** A lone surrogate (`\ud800`) is saved as U+FFFD. It stays visible, so this is harmless.
+
+### デザイン評価（基準 7/10。Designer の変更なし、崩れなしを確認）
+- **Header (anonymous, regular user, admin all the same):**
+
+  | Width | Header height |
+  |---|---|
+  | 375px | 165px |
+  | 768px | 109px |
+  | 1024px | 109px |
+  | 1280px | 61px |
+
+  There is no horizontal scrolling at any width (`s3t4-{admin,anon,user}-{375,768,1024,1280}.png`).
+- **Focus rings:**
+
+  | Where | Ring colour | Contrast |
+  |---|---|---|
+  | Logo link on the black header | #53b1ff | 9.10:1 |
+  | Theme button and search box on the black header | white | 21:1 |
+  | 「内閣一覧へ戻る」 on the blue band | white | about 5.1:1 (`s3t4-light-back-focus.png`) |
+  | 「編集」 on the light canvas | #0064b7 | 5.99:1 |
+  | 「編集」 on the dark canvas | #53b1ff | 9.10:1 (`s3t4-dark-focus.png`) |
+
+- **Design quality: 7/10** — clear hierarchy: weight-300 large heading, then reading, then a section heading; errors are signalled with a left border.
+- **Originality: 7/10** — black header, blue section band and canvas are used consistently. 0 AI-slop signs.
+- **Craft: 7/10** — the 768 header fits on one row. Deductions: the logo still breaks onto two lines at 320px, and the empty heading from finding 1 visibly hollows out the band.
+- **Functionality: 7/10** — Tab order matches the visual order, every focus ring is above 3:1, and errors use `role=alert`.
+
+### 改善提案（FAIL の理由にしない）
+- Decide how to handle compatibility ideographs and Ideographic Variation Sequences (spec decision).
+- Keep the logo on one line at 320px.
+- Add a server-side length limit for the display name.
+- Move the delete dialog's initial focus off 「削除する」.
+- Make `ThemeToggle` prefer the cookie.
+- Check the Origin header on write APIs.
+
+### 再テスト対象（次回、最初に確認する項目）
+1. **Must return 400, both API and screen:**
+   - Invisible only: `<U+FFF9>`, `<U+FFFA>`, `<U+FFFB>`, `<U+FFFC>`.
+   - Hidden character inside: `評価<U+FFF9>`.
+   - Line/paragraph separators: `評価<U+2028>行`, `評価<U+2029>段`.
+2. **Space variants:**
+   - After creating `評価 空白`, both `評価<U+00A0>空白` and `評価  空白` (two spaces) must return 409 (or 400).
+   - `安倍<U+3000>晋三`-style names with a full-width space must still return 201.
+3. Recheck this attempt's passing values: the attempt-3 failures, the emoji list, 50 and 51 characters, and re-saving the seed data.
+4. The 15 contract items and the regression checks.
+
+### 評価に使った環境と残したもの
+- **Throwaway DB:** `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/eval-s3-t4.db`
+  - Accounts: `eval-admin4` (admin), `eval-user4`, `eval-ui4`, all `@s3t4.example.test`.
+  - People: ids 178–211.
+    - Empty-heading names: 195, 196, 208, 210.
+    - Lookalike pairs: 197/198/199 and 191–194, 201, 202.
+    - 178 was renamed to 「評価PUT改名T4」.
+    - 211 is deleted.
+    - All 87 seed people were re-saved with their existing values.
+- **`local.db`:** read only. persons 87, user 0, id 2 is 「加藤勝信」, unchanged.
+- **Servers:**
+  - 3100 is stopped; one process did not exit on a normal kill and had to be force-killed.
+  - dev 3000 is still running and returns 200.
+- **Repository:**
+  - `pnpm build` modified `apps/web/next-env.d.ts` (uncommitted). Restore it or let dev regenerate it.
+  - Playwright MCP wrote logs to `.playwright-mcp/` (gitignored).
+  - I changed no code or docs.
+- **Screenshots and logs (scratchpad):**
+  - `s3t4-fff9-empty-heading.png`、`s3t4-ui-fffb-created.png`、`s3t4-h1-{191,192,193,196,197,198,208}.png`
+  - `s3t4-{admin,anon,user}-{375,768,1024,1280}.png`、`s3t4-light-back-focus.png`、`s3t4-dark-focus.png`、`s3t4-delete-dialog.png`
+  - `tmp-ignore.png`（副産物）、`build-t4.log`、`server-3100.log`、`server-3100b.log`
+  - いずれも `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/` にある。
+- **Browser:** closed.
+
+VERDICT: FAIL
+RETURN_TO: generator
