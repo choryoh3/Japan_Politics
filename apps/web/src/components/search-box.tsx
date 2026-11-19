@@ -186,7 +186,7 @@ export function SearchBox() {
     <div
       ref={containerRef}
       onBlur={handleBlur}
-      className="min-w-0 flex-1 max-xl:order-last max-xl:basis-full md:relative xl:max-w-sm"
+      className="min-w-0 flex-1 max-xl:basis-full md:relative xl:max-w-sm"
     >
       <input
         type="search"
