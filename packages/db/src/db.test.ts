@@ -201,8 +201,67 @@ describe("人物の入力検証", () => {
     }
   });
 
+  it("見えない文字だけ・見た目が同じ重複を作れる氏名は拒否する（標準の性質で網羅）", () => {
+    const onlyInvisible = [
+      "\u3164",
+      "\uFFA0",
+      "\u2800",
+      "\u034F",
+      "\uFE0F",
+      "\u0301",
+      "\u3164\u3164",
+    ];
+    for (const bad of onlyInvisible) {
+      expect(validatePersonInput({ name: bad, kana: "あ" }).ok).toBe(false);
+    }
+    const lookalike = [
+      "評価\uFE0E",
+      "評価\u180B",
+      "評価\u{E0100}",
+      "評価😀\u{E0061}",
+      "評価😀\u200D😀",
+      "評価😀\uFE0F",
+    ];
+    for (const bad of lookalike) {
+      expect(validatePersonInput({ name: bad, kana: "あ" })).toEqual({
+        ok: false,
+        errors: { name: "nameInvalidChar" },
+      });
+    }
+  });
+
+  it("正当な絵文字（肌の色・家族・旗・虹の旗・海賊旗など）は許し、51文字は拒否する", () => {
+    const valid = [
+      "👩🏽\u200D💻",
+      "👨\u200D👩\u200D👧",
+      "🏴\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}",
+      "🏳\uFE0F\u200D🌈",
+      "🏴\u200D☠\uFE0F",
+      "👁\uFE0F\u200D🗨\uFE0F",
+      "🇯🇵",
+      "%_\\",
+      "あ".repeat(50),
+    ];
+    for (const ok of valid) {
+      expect(validatePersonInput({ name: ok, kana: "あ" }).ok).toBe(true);
+    }
+    expect(validatePersonInput({ name: "あ".repeat(51), kana: "あ" })).toEqual({
+      ok: false,
+      errors: { name: "nameTooLong" },
+    });
+  });
+
+  it("氏名は NFC に正規化され、見た目が同じ濁点の別表現は同じ文字列になる", () => {
+    const composed = validatePersonInput({ name: "評価が", kana: "あ" });
+    const decomposed = validatePersonInput({ name: "評価か\u3099", kana: "あ" });
+    expect(composed.ok && decomposed.ok).toBe(true);
+    if (composed.ok && decomposed.ok) {
+      expect(decomposed.value.name).toBe(composed.value.name);
+    }
+  });
+
   it("メモの見えない文字は拒否する", () => {
-    for (const bad of ["\u200B", "メモ\u202E", "メモ\u00AD"]) {
+    for (const bad of ["\u200B", "メモ\u202E", "メモ\u00AD", "メモ\u3164", "メモ😀\u200D😀"]) {
       expect(validatePersonInput({ name: "A", kana: "あ", memo: bad })).toEqual({
         ok: false,
         errors: { memo: "memoInvalidChar" },
@@ -260,6 +319,14 @@ describe("人物の追加・修正・削除と管理者付与", () => {
     expect(
       await updatePerson(db, 999999, { name: "x", kana: "あ", birthDate: null, memo: null }),
     ).toEqual({ ok: false, reason: "notFound" });
+  });
+
+  it("NFC で同じになる氏名は検証後に重複として拒否される", async () => {
+    const first = validatePersonInput({ name: "正規化が", kana: "あ" });
+    const second = validatePersonInput({ name: "正規化か\u3099", kana: "あ" });
+    if (!first.ok || !second.ok) throw new Error("検証に失敗した");
+    expect((await createPerson(db, first.value)).ok).toBe(true);
+    expect(await createPerson(db, second.value)).toEqual({ ok: false, reason: "duplicate" });
   });
 
   it("経歴のない人物は削除でき、経歴のある人物は削除できない", async () => {

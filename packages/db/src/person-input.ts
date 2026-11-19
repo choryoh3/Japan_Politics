@@ -15,44 +15,63 @@ function hasNoControlChar(value: string): boolean {
   return !CONTROL_CHAR_PATTERN.test(value);
 }
 
-/** 書式文字（ゼロ幅スペース、ソフトハイフン、文字の向きを変える制御など。見えないが文字として残る）。 */
-const FORMAT_CHAR_PATTERN = /\p{Cf}/u;
-
 /**
- * 絵文字の結合に使われる正当な書式文字の並び。
- * - ZWJ（U+200D）は、絵文字どうしの間にあるときだけ許す（家族の絵文字など）。
- * - タグ文字（U+E0020-E007F）は、絵文字の直後だけ許す（イングランドの旗など）。
- * これ以外の位置にある書式文字は「見た目が同じ別人物」を作れるため許さない。
+ * 「見えない文字」の定義。Unicode の標準の性質 Default_Ignorable_Code_Point
+ * （ゼロ幅スペース、ソフトハイフン、向きの制御、異体字セレクタ、ハングル・フィラー U+3164 など、
+ * 画面に何も描かれない文字の一括りの分類）に、点字の空白 U+2800 を足したもの。
+ * 文字を1つずつ列挙すると取りこぼすため、標準の分類で網羅する。
  */
-const EMOJI_JOINER_PATTERN =
-  /(?<=[\p{Extended_Pictographic}\uFE0F])\u200D(?=\p{Extended_Pictographic})|(?<=[\p{Extended_Pictographic}\u{E0020}-\u{E007F}])[\u{E0020}-\u{E007F}]/gu;
+const INVISIBLE_CHAR_PATTERN = /[\p{Default_Ignorable_Code_Point}\u2800]/u;
 
 /**
- * 絵文字の正当な結合を除いたうえで、書式文字が残っていないかを調べる。
+ * 絵文字の正当な並び（Unicode の RGI_Emoji）。
+ * 肌の色付き（👩🏽‍💻）・家族（👨‍👩‍👧）・旗（🇯🇵、イングランドの旗）・🏳️‍🌈・❤️ などが入る。
+ * これらの内側にある ZWJ・異体字セレクタ・タグ文字は「見えない文字」だが正当なので、
+ * 検査の前に取り除く。意味のない並び（😀+ZWJ+😀、😀+タグ文字）は RGI に含まれず、取り除かれずに残る。
+ * 「v」フラグ（文字列のプロパティ）が必要なため、RegExp の文字列で組み立てる。
+ */
+const RGI_EMOJI_PATTERN = new RegExp("\\p{RGI_Emoji}", "gv");
+
+/**
+ * 見えない文字を含まないかを調べる。正当な絵文字の中にあるものだけは例外として許す。
  * @param value 文字列
- * @returns 不正な書式文字がなければ true
+ * @returns 不正な見えない文字がなければ true
  */
-function hasNoInvisibleFormatChar(value: string): boolean {
-  return !FORMAT_CHAR_PATTERN.test(value.replace(EMOJI_JOINER_PATTERN, ""));
+function hasNoInvisibleChar(value: string): boolean {
+  return !INVISIBLE_CHAR_PATTERN.test(value.replace(RGI_EMOJI_PATTERN, ""));
 }
 
 /**
- * 見える文字（書式文字と空白を除いて残る文字）が1つ以上あるかを調べる。
+ * 見える文字が1つ以上あるかを調べる。
+ * 見えない文字・空白・結合文字（濁点や異体字だけが単独で残る並び）を除いて、1文字以上残れば true。
  * @param value 文字列
  * @returns 見える文字があれば true
  */
 function hasVisibleChar(value: string): boolean {
-  return value.replace(/[\p{Cf}\s]/gu, "").length > 0;
+  const withoutEmojiJoiners = value.replace(RGI_EMOJI_PATTERN, "\u{1F600}");
+  return (
+    withoutEmojiJoiners.replace(/[\p{Default_Ignorable_Code_Point}\u2800\s\p{M}]/gu, "").length > 0
+  );
 }
 
 /**
- * メモに使えない制御文字（改行とタブ以外）を含まないかを調べる。
+ * 氏名を NFC に正規化する。「か＋濁点」と「が」のような見た目が同じ別表現を同じ文字列にそろえ、
+ * 重複チェックをすり抜けられないようにする。
+ * @param value 入力値
+ * @returns 文字列なら正規化した文字列、それ以外はそのまま（型の検証は後段で行う）
+ */
+function normalizeName(value: unknown): unknown {
+  return typeof value === "string" ? value.normalize("NFC") : value;
+}
+
+/**
+ * メモに使えない文字（改行とタブ以外の制御文字、不正な見えない文字）を含まないかを調べる。
  * @param value 文字列
  * @returns 禁止文字がなければ true
  */
 function hasNoForbiddenMemoChar(value: string): boolean {
   const withoutAllowed = value.replace(/[\n\r\t]/g, "");
-  return !CONTROL_CHAR_PATTERN.test(withoutAllowed) && hasNoInvisibleFormatChar(withoutAllowed);
+  return !CONTROL_CHAR_PATTERN.test(withoutAllowed) && hasNoInvisibleChar(withoutAllowed);
 }
 
 /** 氏名の最大文字数。 */
@@ -89,15 +108,18 @@ function emptyToNull(value: unknown): unknown {
  * 画面側が辞書（next-intl）で日本語にする。
  */
 export const personInputSchema = z.object({
-  name: z
-    .string({ error: "nameRequired" })
-    .trim()
-    .min(1, { error: "nameRequired" })
-    // 見えない文字だけの氏名は「未入力」と同じ扱いにする
-    .refine(hasVisibleChar, { error: "nameRequired" })
-    .max(PERSON_NAME_MAX_LENGTH, { error: "nameTooLong" })
-    .refine(hasNoControlChar, { error: "nameInvalidChar" })
-    .refine(hasNoInvisibleFormatChar, { error: "nameInvalidChar" }),
+  name: z.preprocess(
+    normalizeName,
+    z
+      .string({ error: "nameRequired" })
+      .trim()
+      .min(1, { error: "nameRequired" })
+      // 見えない文字だけの氏名は「未入力」と同じ扱いにする
+      .refine(hasVisibleChar, { error: "nameRequired" })
+      .max(PERSON_NAME_MAX_LENGTH, { error: "nameTooLong" })
+      .refine(hasNoControlChar, { error: "nameInvalidChar" })
+      .refine(hasNoInvisibleChar, { error: "nameInvalidChar" }),
+  ),
   kana: z
     .string({ error: "kanaRequired" })
     .trim()
