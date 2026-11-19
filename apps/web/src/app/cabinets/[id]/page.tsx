@@ -44,8 +44,21 @@ function tenureText(
       </>
     );
   }
-  if (row.startDate) return t("tenureFrom", { date: formatDate(row.startDate) });
-  if (row.endDate) return t("tenureUntil", { date: formatDate(row.endDate) });
+  // 日付が 1 つだけでも折り返さない span にして、「ま／で」「か／ら」のような 1 文字だけの折れを防ぐ
+  if (row.startDate) {
+    return (
+      <span className="whitespace-nowrap">
+        {t("tenureFrom", { date: formatDate(row.startDate) })}
+      </span>
+    );
+  }
+  if (row.endDate) {
+    return (
+      <span className="whitespace-nowrap">
+        {t("tenureUntil", { date: formatDate(row.endDate) })}
+      </span>
+    );
+  }
   return null;
 }
 
@@ -89,7 +102,7 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
   const tenureCellClass = isAdmin
     ? "max-lg:w-full max-lg:p-0 max-lg:empty:hidden"
     : "max-md:order-last max-md:w-full max-md:p-0 max-md:empty:hidden";
-  const sourceCellClass = isAdmin ? "max-lg:p-0" : "max-md:p-0";
+  const sourceCellClass = isAdmin ? "max-lg:w-full max-lg:p-0" : "max-md:p-0";
   const actionsCellClass = "lg:whitespace-nowrap max-lg:w-full max-lg:p-0";
 
   return (

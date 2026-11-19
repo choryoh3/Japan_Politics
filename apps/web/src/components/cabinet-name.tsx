@@ -7,7 +7,7 @@ import { Fragment } from "react";
  */
 export function CabinetName({ name }: { name: string }) {
   return (
-    <span className="[word-break:keep-all]">
+    <span className="[overflow-wrap:anywhere] [word-break:keep-all]">
       {name.split(/(?=第\d+次|(?<!次)改造)/).map((part, index) => (
         <Fragment key={index}>
           {index > 0 && <wbr />}
