@@ -1,0 +1,77 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
+import { Noto_Sans_JP } from "next/font/google";
+import type { ReactNode } from "react";
+import { AuthNav } from "@/components/auth-nav";
+import { SearchBox } from "@/components/search-box";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { THEME_COOKIE_NAME, parseTheme } from "@/lib/theme";
+import "./globals.css";
+
+// DESIGN.md の細い見出し（300）から太いボタン（700）までを使う
+const notoSansJp = Noto_Sans_JP({
+  weight: ["300", "400", "500", "700"],
+  display: "swap",
+  variable: "--font-noto-sans-jp",
+});
+
+/**
+ * ページ共通のメタ情報（タイトル）を作る。文言は辞書から取る。
+ * @returns メタデータ
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("common");
+  return { title: t("appName") };
+}
+
+/**
+ * 全ページ共通のレイアウト（cookie を読むため、全ページが動的に描画される）。html の lang とヘッダー、文言の提供元を用意する。
+ * @param props.children 各ページの中身
+ */
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const locale = await getLocale();
+  const t = await getTranslations("common");
+  const tn = await getTranslations("nav");
+  // 配色はサーバーが cookie から決めて、最初の HTML に入れる。
+  // インラインスクリプトは not-found などクライアントで組み立てられる画面で実行されないため使わない。
+  // 選択が無ければ undefined になり、属性が付かず OS の設定に従う。
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE_NAME)?.value);
+  return (
+    <html lang={locale} className={notoSansJp.variable} data-theme={theme} suppressHydrationWarning>
+      <body>
+        <NextIntlClientProvider>
+          <header className="border-b border-hairline-dark bg-canvas-dark text-on-dark">
+            <div className="relative mx-auto flex min-h-12 max-w-7xl flex-wrap items-center gap-x-2 gap-y-1 px-6 py-3 md:gap-x-3 lg:gap-x-6 md:px-12 md:py-2">
+              {/* DOM の順を見た目の順（ロゴ → 配色 → アカウント → 検索）と同じにして、Tab 順と一致させる */}
+              <Link
+                href="/"
+                className="flex min-h-11 min-w-0 flex-1 items-center text-base font-medium tracking-normal text-on-dark md:text-lg md:tracking-wider md:mr-auto md:flex-none"
+              >
+                {t("appName")}
+              </Link>
+              <ThemeToggle />
+              <div className="flex min-w-0 items-center gap-x-4 md:gap-x-6 max-md:basis-full">
+                <nav aria-label={tn("main")} className="flex">
+                  <Link
+                    href="/ministries"
+                    className="inline-flex min-h-11 items-center text-sm text-on-dark underline-offset-4 hover:underline"
+                  >
+                    {tn("ministries")}
+                  </Link>
+                </nav>
+                <AuthNav />
+              </div>
+              <SearchBox />
+            </div>
+          </header>
+          <main className="mx-auto max-w-7xl px-6 pb-16 pt-12 md:px-12 md:pb-section md:pt-16">
+            {children}
+          </main>
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}

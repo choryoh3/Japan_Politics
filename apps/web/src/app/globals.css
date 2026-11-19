@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+/*
+ * デザイントークン（docs/design/DESIGN.md の値を CSS 変数に写したもの）。
+ * ライト / ダークの両キャンバスを、OS の設定（prefers-color-scheme）で切り替える。
+ */
+:root {
+  --canvas: #ffffff;
+  --surface-card: #f5f7fa;
+  --ink: #000000;
+  --body: rgba(0, 0, 0, 0.6);
+  --mute: #6b6b6b;
+  --hairline: #e5e5e5;
+  --link: #0064b7;
+  --row-hover: #f5f7fa;
+  --warning-ink: #c81b3a;
+  color-scheme: light;
+}
+
+/* 明示の選択（html の data-theme）が最優先。無ければ OS の設定に従う */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas: #000000;
+    --surface-card: #181818;
+    --ink: #ffffff;
+    --body: rgba(255, 255, 255, 0.7);
+    --mute: rgba(229, 229, 229, 0.55);
+    --hairline: rgba(229, 229, 229, 0.2);
+    --link: #53b1ff;
+    --row-hover: #121314;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --canvas: #000000;
+  --surface-card: #181818;
+  --ink: #ffffff;
+  --body: rgba(255, 255, 255, 0.7);
+  --mute: rgba(229, 229, 229, 0.55);
+  --hairline: rgba(229, 229, 229, 0.2);
+  --link: #53b1ff;
+  --row-hover: #121314;
+  --warning-ink: #ff6b86;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --canvas: #ffffff;
+  --surface-card: #f5f7fa;
+  --ink: #000000;
+  --body: rgba(0, 0, 0, 0.6);
+  --mute: #6b6b6b;
+  --hairline: #e5e5e5;
+  --link: #0064b7;
+  --row-hover: #f5f7fa;
+  --warning-ink: #c81b3a;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface-card: var(--surface-card);
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-mute: var(--mute);
+  --color-hairline: var(--hairline);
+  --color-link: var(--link);
+  --color-row-hover: var(--row-hover);
+  --color-warning-ink: var(--warning-ink);
+  --font-sans:
+    var(--font-noto-sans-jp), "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+}
+
+@theme {
+  --color-primary: #0070d1;
+  --color-primary-pressed: #0064b7;
+  --color-ink-deep: #121314;
+  --color-canvas-dark: #000000;
+  --color-on-dark: #ffffff;
+  --color-on-dark-mute: #cccccc;
+  --color-link-on-dark: #53b1ff;
+  --color-hairline-dark: rgba(229, 229, 229, 0.2);
+  --color-warning: #c81b3a;
+  --radius-card: 8px;
+  --spacing-section: 96px;
+  --text-display-xl: 54px;
+  --text-display-md: 35px;
+  --text-heading-xl: 28px;
+  --text-heading-lg: 22px;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 章の帯を画面幅いっぱいに広げた分の横スクロールを出さない */
+html,
+body {
+  overflow-x: clip;
+}
+
+/* フォーカスリングは DESIGN.md のフォーカス色（プライマリ）で、全操作要素に出す */
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 3px;
+  scroll-margin: 16px;
+}
+
+/* 青い面の上では、リングを白にして 3:1 以上のコントラストを確保する */
+.bg-primary :focus-visible,
+.on-primary :focus-visible {
+  outline-color: var(--color-on-dark);
+}
+
+/* ヘッダーは常に黒地なので、リングは黒地で 3:1 以上になる明るい青にする */
+header :focus-visible {
+  outline-color: var(--color-link-on-dark);
+}
+
+/* 検索の候補パネルはヘッダー内にあるが地は明るいカードなので、リングはキャンバス用の青に戻す */
+header [role="listbox"] :focus-visible,
+header [role="status"] :focus-visible {
+  outline-color: var(--link);
+}
+
+/* 内閣名・出典などのリンク: 下線なし、ホバーで下線 */
+.link-inline {
+  color: var(--link);
+  text-underline-offset: 4px;
+}
+.link-inline:hover {
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  tbody tr {
+    transition: background-color 150ms ease;
+  }
+}

@@ -25,3 +25,18 @@ node_modules/
 Thumbs.db
 .idea/
 *.swp
+
+# pnpm / Next.js / ビルド成果物
+.next/
+out/
+dist/
+.turbo/
+coverage/
+*.tsbuildinfo
+.vercel/
+
+# ローカル DB（Turso 開発用 SQLite）
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

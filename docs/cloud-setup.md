@@ -25,7 +25,9 @@ claude.ai/code の環境セレクタ → 歯車アイコンで、環境ごとに
 ### 1. ネットワーク
 
 - Network access: **Limited**（「Allow package managers」ON）のまま使う
-- Allowed domains に追加: `mcp.context7.com`
+- Allowed domains に追加: `mcp.context7.com`、`ui.shadcn.com`（shadcn/ui のレジストリ）、`fonts.googleapis.com` と `fonts.gstatic.com`（next/font のビルド時取得）
+- Turso に実接続するときだけ追加: `<db名>-<org名>.turso.io`（DB 作成後に判明。ワイルドカード不可）。Platform API を使うなら `api.turso.tech`
+- Vercel CLI を使うときだけ追加: `api.vercel.com`（通常は Git 連携で配備するため不要）
 - github.com / pypi.org / registry.npmjs.org は既定で許可済み（Serena の取得に使う）
 
 ### 2. 環境変数（`.env` 形式）
@@ -36,7 +38,13 @@ MCP_TIMEOUT=60000
 PLAYWRIGHT_MCP_EXECUTABLE_PATH=/usr/bin/google-chrome
 PLAYWRIGHT_MCP_HEADLESS=true
 PLAYWRIGHT_MCP_SANDBOX=false
+NEXT_TELEMETRY_DISABLED=1
+BETTER_AUTH_URL=http://localhost:3000
+DATABASE_URL=file:./local.db
+COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 ```
+
+Turso 接続時のシークレット（`TURSO_AUTH_TOKEN`、`BETTER_AUTH_SECRET`）は、必要になった時点でユーザー自身が環境設定に追加する。`CI=true` は `pnpm install` を lockfile 固定にするため設定しない。
 
 - 環境変数は、その環境を使える全員が読める。共有の環境にキーを置く場合は、チームで合意してから設定する
 - Playwright のブラウザ配布元は既定の許可リストにないため、同梱の Chrome を指定する。`PLAYWRIGHT_MCP_*` は @playwright/mcp の公式の環境変数

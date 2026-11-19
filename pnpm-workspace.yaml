@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+onlyBuiltDependencies:
+  - "@libsql/client"
+  - libsql
+  - esbuild
+  - sharp
+  - unrs-resolver
