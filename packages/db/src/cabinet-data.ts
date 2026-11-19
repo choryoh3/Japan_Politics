@@ -27,12 +27,22 @@ export interface CabinetSeed {
   /** 出典 URL（首相官邸の閣僚名簿ページ） */
   sourceUrl: string;
   roster: readonly RosterEntry[];
+  /**
+   * 内閣官房副長官・副大臣・大臣政務官（任意。最新の 2 内閣だけ）。
+   * 閣僚の次の表示順で投入する。出典 URL は閣僚と同じ内閣のページ、メモは DEPUTY_SOURCE_NOTE。
+   */
+  deputies?: readonly RosterEntry[];
 }
 
 /** 出典メモ（全閣僚人事に共通）。確認できていないことを明記する。 */
 export const SOURCE_NOTE =
   "首相官邸の閣僚名簿ページ（歴代内閣）を想定した出典。首相官邸はこの環境から到達できず、" +
   "内容・URL とも作成者の知識に基づく未確認の情報。公式資料での照合が必要。";
+
+/** 内閣官房副長官・副大臣・大臣政務官の出典メモ。確認できた範囲と、できていない範囲を明記する。 */
+export const DEPUTY_SOURCE_NOTE =
+  "首相官邸の内閣ページを想定した出典。首相官邸はこの環境から到達できず、氏名・役職・URL とも" +
+  "作成者の知識に基づく未確認の情報（官邸のページの実在も未確認）。公式資料での照合が必要。";
 
 const PM = "内閣総理大臣";
 const CHIEF = "内閣官房長官";
@@ -193,6 +203,20 @@ const takaichi: RosterEntry[] = [
   ["少子化対策担当大臣", "黄川田仁志", "きかわだひとし"],
 ];
 
+/**
+ * 第1次・第2次高市内閣の内閣官房副長官・副大臣・大臣政務官。
+ *
+ * 【正直な範囲】副大臣・大臣政務官の氏名は、確信を持って書ける知識がなく、公式資料（官邸・各府省）にも
+ * この環境から到達できないため、1 人も登録していない（氏名を創作しない）。公式の名簿を確認できる人が
+ * ここに [役職, 氏名, よみがな] を足せば、`pnpm db:seed` で投入される（何度流しても件数は増えない）。
+ * 内閣官房副長官の 3 名は作成者の知識による（未確認。第2次も同じ顔ぶれと想定）。
+ */
+const takaichiDeputies: RosterEntry[] = [
+  ["内閣官房副長官", "尾崎正直", "おざきまさなお"],
+  ["内閣官房副長官", "佐藤啓", "さとうけい"],
+  ["内閣官房副長官", "露木康浩", "つゆきやすひろ"],
+];
+
 /** 首相官邸の閣僚名簿ページの URL を作る。 @param dir 官邸サイト内の内閣フォルダ名 */
 function kantei(dir: string): string {
   return `https://www.kantei.go.jp/jp/${dir}/meibo/daijin/index.html`;
@@ -255,6 +279,7 @@ export const cabinetSeeds: readonly CabinetSeed[] = [
     endDate: "2026-02-18",
     sourceUrl: kantei("104_takaichi"),
     roster: takaichi,
+    deputies: takaichiDeputies,
   },
   {
     name: "第2次高市内閣",
@@ -262,5 +287,6 @@ export const cabinetSeeds: readonly CabinetSeed[] = [
     endDate: null,
     sourceUrl: kantei("105_takaichi"),
     roster: takaichi,
+    deputies: takaichiDeputies,
   },
 ];

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { getCabinetDetail } from "@japan-politics/db";
+import { getCabinetDetail, postCategory } from "@japan-politics/db";
 import { AppointmentForm } from "@/components/appointment-form";
 import { ForbiddenNotice, requireAdminOrRedirect } from "@/components/admin-gate";
 import { parseCabinetId } from "@/lib/cabinet-id";
@@ -29,7 +29,9 @@ export default async function EditAppointmentPage({
   const t = await getTranslations("appointmentForm");
   return (
     <div>
-      <h1 className="text-[32px] font-light leading-tight md:text-display-xl">{t("editTitle")}</h1>
+      <h1 className="text-[32px] font-light leading-tight md:text-display-xl">
+        {postCategory(row.postName) === "minister" ? t("editTitle") : t("editPostTitle")}
+      </h1>
       <p className="mt-4 text-body">
         {t("cabinetLabel")}:{" "}
         <span className="font-medium [overflow-wrap:anywhere]">{detail.name}</span>

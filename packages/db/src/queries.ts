@@ -1,6 +1,8 @@
-import { asc, desc, eq, or, sql } from "drizzle-orm";
+import { asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
-import { cabinetAppointments, cabinets, persons } from "./schema.ts";
+import { postNamesForMinistry, type PostCategory } from "./cabinet-posts.ts";
+import { cabinetAppointments, cabinets, ministries, persons } from "./schema.ts";
+import { resolveTenure } from "./tenure.ts";
 
 /** 内閣一覧の 1 行分。 */
 export interface CabinetListItem {
@@ -236,4 +238,121 @@ export async function searchSuggestions(db: Db, query: string): Promise<SearchSu
     .orderBy(desc(cabinets.startDate))
     .limit(SUGGESTION_LIMIT);
   return { persons: personRows, cabinets: cabinetRows };
+}
+
+/** 省庁一覧の 1 行分。 */
+export interface MinistryListItem {
+  id: number;
+  name: string;
+}
+
+/**
+ * 府省を一覧の表示順で返す。
+ * @param db DB ハンドル
+ * @returns 府省の一覧
+ */
+export async function listMinistries(db: Db): Promise<MinistryListItem[]> {
+  return db
+    .select({ id: ministries.id, name: ministries.name })
+    .from(ministries)
+    .orderBy(asc(ministries.sortOrder), asc(ministries.id));
+}
+
+/** 省庁ページの 1 行分（ある人物がある内閣である役職に就いた記録）。日付は内閣の期間で補った実際の在任期間。 */
+export interface MinistryTenureRow {
+  /** 人事 ID */
+  id: number;
+  personId: number;
+  personName: string;
+  postName: string;
+  cabinetId: number;
+  cabinetName: string;
+  /** 就任日 */
+  startDate: string;
+  /** 退任日（null は現在も在任） */
+  endDate: string | null;
+}
+
+/** 省庁ページの内容。 */
+export interface MinistryPage {
+  id: number;
+  name: string;
+  /** 区分ごとの歴代の在任者。就任日の新しい順 */
+  holders: Record<
+    Extract<PostCategory, "minister" | "viceMinister" | "parliamentaryVice">,
+    MinistryTenureRow[]
+  >;
+}
+
+/**
+ * 府省 1 件と、歴代の大臣・副大臣・大臣政務官を返す。各区分は就任日の新しい順
+ * （同じ日は内閣の発足が新しい順、それも同じなら名簿の順）。
+ * @param db DB ハンドル
+ * @param id 府省 ID
+ * @returns 省庁ページの内容。存在しなければ null
+ */
+export async function getMinistryPage(db: Db, id: number): Promise<MinistryPage | null> {
+  const [ministry] = await db.select().from(ministries).where(eq(ministries.id, id));
+  if (!ministry) return null;
+
+  /**
+   * 1 つの区分の在任者を取り出して並べる。
+   * @param category 役職の区分
+   */
+  const load = async (
+    category: "minister" | "viceMinister" | "parliamentaryVice",
+  ): Promise<MinistryTenureRow[]> => {
+    const postNames = postNamesForMinistry(ministry.name, category);
+    if (postNames.length === 0) return [];
+    const rows = await db
+      .select({
+        id: cabinetAppointments.id,
+        sortOrder: cabinetAppointments.sortOrder,
+        postName: cabinetAppointments.postName,
+        personId: persons.id,
+        personName: persons.name,
+        cabinetId: cabinets.id,
+        cabinetName: cabinets.name,
+        cabinetStart: cabinets.startDate,
+        cabinetEnd: cabinets.endDate,
+        startDate: cabinetAppointments.startDate,
+        endDate: cabinetAppointments.endDate,
+      })
+      .from(cabinetAppointments)
+      .innerJoin(persons, eq(persons.id, cabinetAppointments.personId))
+      .innerJoin(cabinets, eq(cabinets.id, cabinetAppointments.cabinetId))
+      .where(inArray(cabinetAppointments.postName, postNames));
+    return rows
+      .map((row) => {
+        const tenure = resolveTenure(row, { startDate: row.cabinetStart, endDate: row.cabinetEnd });
+        return { row, tenure };
+      })
+      .sort((a, b) => {
+        if (a.tenure.start !== b.tenure.start) return a.tenure.start < b.tenure.start ? 1 : -1;
+        if (a.row.cabinetStart !== b.row.cabinetStart) {
+          return a.row.cabinetStart < b.row.cabinetStart ? 1 : -1;
+        }
+        return a.row.sortOrder - b.row.sortOrder || a.row.id - b.row.id;
+      })
+      .map(({ row, tenure }) => ({
+        id: row.id,
+        personId: row.personId,
+        personName: row.personName,
+        postName: row.postName,
+        cabinetId: row.cabinetId,
+        cabinetName: row.cabinetName,
+        startDate: tenure.start,
+        endDate: tenure.end,
+      }));
+  };
+
+  return {
+    id: ministry.id,
+    name: ministry.name,
+    holders: {
+      minister: await load("minister"),
+      viceMinister: await load("viceMinister"),
+      parliamentaryVice: await load("parliamentaryVice"),
+    },
+  };
 }

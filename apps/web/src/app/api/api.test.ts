@@ -362,6 +362,38 @@ describe("内閣・閣僚人事の書き込み API", () => {
     expect(await roster()).toHaveLength(0);
   });
 
+  it("副大臣・内閣官房副長官・大臣政務官を同じ API で扱え、同じ期間の副大臣 2 人も通る。未知の役職は 400", async () => {
+    const created = await send("POST", "/api/cabinets", {
+      name: "API副大臣試験内閣",
+      startDate: "2027-01-01",
+    });
+    const deputyCabinetId = ((await created.json()) as { id: number }).id;
+    const second = await send("POST", "/api/persons", {
+      name: "API試験人物二",
+      kana: "えーぴーあい",
+    });
+    const secondId = ((await second.json()) as { id: number }).id;
+    const path = `/api/cabinets/${deputyCabinetId}/appointments`;
+    for (const personIdValue of [personId, secondId]) {
+      const res = await send("POST", path, { postName: "財務副大臣", personId: personIdValue });
+      expect(res.status).toBe(201);
+    }
+    expect((await send("POST", path, { postName: "内閣官房副長官", personId })).status).toBe(201);
+    expect((await send("POST", path, { postName: "財務大臣政務官", personId })).status).toBe(201);
+    const bad = await send("POST", path, { postName: "財務省副大臣", personId });
+    expect(bad.status).toBe(400);
+    expect(await bad.json()).toMatchObject({ fields: { postName: "postInvalid" } });
+    // 未ログイン・一般ユーザーは追加できない
+    expect((await send("POST", path, { postName: "財務副大臣", personId }, "")).status).toBe(401);
+    expect(
+      (await send("POST", path, { postName: "財務副大臣", personId }, userCookie)).status,
+    ).toBe(403);
+    const detail = (await (await app.request(`/api/cabinets/${deputyCabinetId}`)).json()) as {
+      roster: { postName: string }[];
+    };
+    expect(detail.roster.filter((row) => row.postName === "財務副大臣")).toHaveLength(2);
+  });
+
   it("経歴のある人物の削除は引き続き 409（回帰）", async () => {
     const hayashi = (
       (await (await app.request(`/api/search?q=${encodeURIComponent("林芳正")}`)).json()) as {

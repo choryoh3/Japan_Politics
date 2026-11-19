@@ -34,6 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
   const t = await getTranslations("common");
+  const tn = await getTranslations("nav");
   // 配色はサーバーが cookie から決めて、最初の HTML に入れる。
   // インラインスクリプトは not-found などクライアントで組み立てられる画面で実行されないため使わない。
   // 選択が無ければ undefined になり、属性が付かず OS の設定に従う。
@@ -52,7 +53,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 {t("appName")}
               </Link>
               <ThemeToggle />
-              <div className="flex min-w-0 max-md:basis-full">
+              <div className="flex min-w-0 items-center gap-x-4 md:gap-x-6 max-md:basis-full">
+                <nav aria-label={tn("main")} className="flex">
+                  <Link
+                    href="/ministries"
+                    className="inline-flex min-h-11 items-center text-sm text-on-dark underline-offset-4 hover:underline"
+                  >
+                    {tn("ministries")}
+                  </Link>
+                </nav>
                 <AuthNav />
               </div>
               <SearchBox />

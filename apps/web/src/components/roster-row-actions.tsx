@@ -18,6 +18,7 @@ import {
  * @param props.appointmentId 人事 ID
  * @param props.postName 確認ダイアログに出す役職名
  * @param props.personName 確認ダイアログに出す氏名
+ * @param props.isMinister 閣僚の人事か（確認ダイアログの見出しを「閣僚人事」と「人事」で書き分ける）
  * @param props.describedBy どの行の操作かを読み上げに伝える要素の id
  */
 export function RosterRowActions({
@@ -25,12 +26,14 @@ export function RosterRowActions({
   appointmentId,
   postName,
   personName,
+  isMinister,
   describedBy,
 }: {
   cabinetId: number;
   appointmentId: number;
   postName: string;
   personName: string;
+  isMinister: boolean;
   describedBy: string;
 }) {
   const t = useTranslations("cabinetDetail");
@@ -97,7 +100,7 @@ export function RosterRowActions({
         className="m-auto w-[min(32rem,calc(100vw-3rem))] whitespace-normal rounded-card border border-hairline bg-canvas p-6 text-ink md:p-8 backdrop:bg-black/70"
       >
         <h2 id={titleId} className="text-heading-lg font-light">
-          {t("deleteDialogTitle")}
+          {isMinister ? t("deleteDialogTitle") : t("deleteDialogTitlePost")}
         </h2>
         <p className="mt-4 text-body [overflow-wrap:anywhere]">
           {t("deleteDialogBody", { post: postName, name: personName })}

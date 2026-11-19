@@ -9,7 +9,7 @@ import {
   SOURCE_URL_MAX_LENGTH,
   validateAppointmentInput,
 } from "@japan-politics/db/cabinet-input";
-import { CABINET_POSTS } from "@japan-politics/db/cabinet-posts";
+import { CABINET_POSTS, POST_CATEGORIES } from "@japan-politics/db/cabinet-posts";
 import { PersonPicker, type PickedPerson } from "@/components/person-picker";
 import { errorsFromResponse, type FormErrors } from "@/lib/form-errors";
 import {
@@ -40,21 +40,26 @@ const FIELD_NAMES = [
 ] as const;
 
 /**
- * 閣僚人事の追加・修正フォーム。保存に成功したら内閣詳細（閣僚名簿）へ移動する。
+ * 人事（閣僚・内閣官房副長官・副大臣・大臣政務官）の追加・修正フォーム。保存に成功したら内閣詳細（閣僚名簿）へ移動する。
  * @param props.cabinetId 対象の内閣 ID
  * @param props.appointmentId 修正する人事の ID。省略すると追加
  * @param props.initial 入力欄の初期値
+ * @param props.onlyMinisters true なら役職の選択肢を閣僚だけにする（「閣僚を追加」から開いたとき）。
+ *   false は全区分を区分ごとのグループで出す（「人事を追加」）。どちらも同じ検証・同じ API を通る
  */
 export function AppointmentForm({
   cabinetId,
   appointmentId,
   initial,
+  onlyMinisters = false,
 }: {
   cabinetId: number;
   appointmentId?: number;
   initial: AppointmentFormValues;
+  onlyMinisters?: boolean;
 }) {
   const t = useTranslations("appointmentForm");
+  const tp = useTranslations("postCategories");
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [person, setPerson] = useState<PickedPerson | null>(initial.person);
@@ -168,11 +173,17 @@ export function AppointmentForm({
           {...errorProps("postName")}
         >
           <option value="">{t("postPlaceholder")}</option>
-          {CABINET_POSTS.map((post) => (
-            <option key={post.name} value={post.name}>
-              {post.name}
-            </option>
-          ))}
+          {POST_CATEGORIES.filter((category) => !onlyMinisters || category === "minister").map(
+            (category) => (
+              <optgroup key={category} label={tp(category)}>
+                {CABINET_POSTS.filter((post) => post.category === category).map((post) => (
+                  <option key={post.name} value={post.name}>
+                    {post.name}
+                  </option>
+                ))}
+              </optgroup>
+            ),
+          )}
         </select>
         {renderError("postName")}
       </div>

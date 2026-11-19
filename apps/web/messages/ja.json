@@ -24,7 +24,7 @@
     "period": "在任期間",
     "startDate": "発足日",
     "endDate": "終了日",
-    "rosterTitle": "閣僚名簿",
+    "rosterTitle": "閣僚",
     "tableLabel": "閣僚名簿（役職・氏名・在任・出典）",
     "columns": {
       "post": "役職",
@@ -55,6 +55,15 @@
       "notFound": "人事が見つかりません。既に削除された可能性があります。",
       "forbidden": "管理者だけが使える操作です",
       "unknown": "削除できませんでした。時間をおいてもう一度お試しください。"
+    },
+    "emptyCategory": "登録された人事はありません",
+    "addPost": "人事を追加",
+    "deleteDialogTitlePost": "人事を削除しますか",
+    "tableLabels": {
+      "minister": "閣僚名簿（役職・氏名・在任・出典）",
+      "deputyChiefSecretary": "内閣官房副長官名簿（役職・氏名・在任・出典）",
+      "viceMinister": "副大臣名簿（役職・氏名・在任・出典）",
+      "parliamentaryVice": "大臣政務官名簿（役職・氏名・在任・出典）"
     }
   },
   "search": {
@@ -104,7 +113,9 @@
     "logout": "ログアウト",
     "addPerson": "人物を追加",
     "account": "ログイン中のアカウント",
-    "adminBadge": "管理者"
+    "adminBadge": "管理者",
+    "ministries": "省庁",
+    "main": "主なページ"
   },
   "auth": {
     "loginTitle": "ログイン",
@@ -228,7 +239,9 @@
       "forbidden": "管理者だけが使える操作です",
       "notFound": "内閣または人事が見つかりません。既に削除された可能性があります。",
       "unknown": "保存できませんでした。時間をおいてもう一度お試しください。"
-    }
+    },
+    "createPostTitle": "人事を追加",
+    "editPostTitle": "人事を編集"
   },
   "personPicker": {
     "label": "人物",
@@ -259,5 +272,39 @@
       "unknown": "登録できませんでした。時間をおいてもう一度お試しください。"
     },
     "registerGroup": "未登録の人物の登録"
+  },
+  "postCategories": {
+    "minister": "閣僚",
+    "deputyChiefSecretary": "内閣官房副長官",
+    "viceMinister": "副大臣",
+    "parliamentaryVice": "大臣政務官"
+  },
+  "ministries": {
+    "title": "省庁",
+    "description": "現行の府省ごとに、歴代の大臣・副大臣・大臣政務官を確認できます。",
+    "listLabel": "府省の一覧",
+    "empty": "府省のデータがまだありません。",
+    "backToList": "省庁一覧へ戻る",
+    "notFoundTitle": "省庁が見つかりません",
+    "notFoundBody": "指定された省庁は存在しません。",
+    "tabsLabel": "在任者の区分",
+    "tabs": {
+      "minister": "大臣",
+      "viceMinister": "副大臣",
+      "parliamentaryVice": "大臣政務官"
+    },
+    "emptyTab": "登録された人事はありません",
+    "tableLabels": {
+      "minister": "歴代の大臣",
+      "viceMinister": "歴代の副大臣",
+      "parliamentaryVice": "歴代の大臣政務官"
+    },
+    "columns": {
+      "name": "氏名",
+      "post": "役職",
+      "cabinet": "内閣",
+      "startDate": "就任日",
+      "endDate": "退任日"
+    }
   }
 }

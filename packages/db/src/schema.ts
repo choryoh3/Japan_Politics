@@ -22,7 +22,16 @@ export const cabinets = sqliteTable("cabinets", {
   endDate: text("end_date"),
 });
 
-/** 閣僚人事テーブル。1行が「ある内閣のある役職に、ある人物が就いた」記録。 */
+/** 府省テーブル。現行の府省 14 件を初期データで用意する（追加・名称変更の操作はない）。 */
+export const ministries = sqliteTable("ministries", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  /** 府省名（例: 財務省） */
+  name: text("name").notNull().unique(),
+  /** 一覧での表示順（小さいほど上） */
+  sortOrder: integer("sort_order").notNull(),
+});
+
+/** 人事テーブル（閣僚・内閣官房副長官・副大臣・大臣政務官）。1行が「ある内閣のある役職に、ある人物が就いた」記録。 */
 export const cabinetAppointments = sqliteTable(
   "cabinet_appointments",
   {
