@@ -723,3 +723,182 @@ All 15 contract items pass, and so does everything that failed in attempt 3. The
 
 VERDICT: FAIL
 RETURN_TO: generator
+
+---
+
+## 試行 5
+
+VERDICT: PASS
+RETURN_TO: none
+
+## Evaluator verdict: pass (Sprint 3 / attempt 5)
+
+Sprint 3 passes. The name-check failure from attempt 4 is fixed, and all 15 contract items, the Sprint 1–2 regression checks, the permission checks and the design check passed.
+
+I ran almost everything on a production build at port 3100 with a throwaway DB. The Sprint 1–2 regression checks ran on dev 3000 and only read `local.db`.
+
+The quality gates also pass when I run them myself:
+
+| Check | Result |
+|---|---|
+| lint | 0 |
+| typecheck | 0 |
+| tests | db 37/37, web 14/14 |
+| `pnpm build` | 0 |
+
+One thing for you to decide, though it is not a reason to fail: a name written with a Cyrillic look-alike letter (`Јohn Smith`, starting with U+0408) is saved alongside `John Smith`, and the two headings look almost the same. Details are in "Look-alike names" below.
+
+### Attempt-4 failure, retested first (API and screen)
+**1. Hidden-character names** — pass.
+- `<U+FFF9>`, `<U+FFFA>`, `<U+FFFB>`, `<U+FFFC>` alone: API returns 400 `nameRequired`; the screen shows 「氏名を入力してください」.
+- `評価<U+FFF9>`, `評価<U+FFFC>`, `評価<U+2028>行`, `評価<U+2029>段`: API returns 400 `nameInvalidChar`; the screen shows 「氏名に使えない文字（…）が含まれています」. The URL stays on `/persons/new` and nothing is saved.
+- PUT behaves the same: `評価PUT<U+FFF9>` returns 400.
+
+**2. Spaces** — pass.
+- `評価 空白` returns 201 (id 178).
+- `評価<U+00A0>空白` returns 400 `nameInvalidChar`, on the API, the screen and PUT.
+- `評価  空白` (two half-width spaces) returns 409 `nameDuplicate`. The screen shows 「同じ氏名の人物が既に登録されています」, and PUT also returns 409.
+- `  評価 空白  ` returns 409, so leading and trailing spaces are trimmed.
+- `評価<U+2003>空白` and `評価<U+202F>空白` return 400.
+- `安倍<U+3000>晋三` returns 201. `<U+3000>安倍<U+3000>晋三<U+3000>` returns 409, because the outer full-width spaces are trimmed.
+- On screen, `安倍<U+3000>晋三画面` and `評価 画面空白` both save and the heading matches.
+
+**3. Cases that passed in attempts 3 and 4 still pass.**
+- **Invisible character alone:** 400 `nameRequired` for `<U+3164>`, `<U+FFA0>`, `<U+2800>`, `<U+034F>`, `<U+FE0F>`, `<U+0301>`, `<U+115F>`, `<U+1160>`, `<U+200B>`. PUT of `<U+3164>` and `<U+0301>` also returns 400.
+- **Look-alike duplicates:** 400 `nameInvalidChar` for `評価<U+FE0E>`, `評価<U+180B>`, `評価<U+E0100>`, `評価😀<U+E0061>`, `評価😀<U+200D>😀`, `評価😀<U+FE0F>`.
+- **NFC (standard Unicode normalization) duplicates:**
+  - `評価が` returns 201, then `評価か<U+3099>` returns 409 (on screen as well).
+  - `評価き<U+3099>` returns 201, then `評価ぎ` returns 409.
+  - PUT of `評価か<U+3099>` returns 409.
+- **Other hidden or control characters:** `<U+202E>`, `<U+00AD>`, NUL, BEL, `評価<U+000A>x` and `<U+0085>` all return 400.
+  - A trailing newline (`評価<U+000A>`) returns 201, but it is stored as `評価` after trimming. Nothing hidden gets saved.
+
+**4. Normal names return 201.**
+- Emoji: `👩🏽<U+200D>💻`, the family emoji, the England flag, 🏳️‍🌈, 🏴‍☠️, 👁️‍🗨️, 🇯🇵.
+- Text: `John Smith`, `O'Brien`, `山田・太郎`, `Jean-Luc`, `評価髙橋﨑山齋藤邊渡ヶ々ーカタカナがぎぐ`, and a 50-character name.
+- A 51-character name returns 400 `nameTooLong` (on screen: 「氏名は50文字以内にしてください」).
+
+**5. `%`, `_`, `\`** — as designed.
+- `評価%_\` returns 400 `nameInvalidChar` (intended).
+- Searching `/api/search?q=` with `%`, `_`, `\`, `%%`, `評価%` or `a_b` returns 200 with 0 hits each time. They are not treated as wildcards, so the search does not return everything.
+
+**6. Memo** — pass.
+- Line breaks and tabs return 201, and an emoji with a joiner (`メモ👩🏽<U+200D>💻`) returns 201.
+- With the character in the middle (`メ?モ`), 400 `memoInvalidChar` for: `<U+2028>`, `<U+2029>`, `<U+FFF9>`, `<U+3164>`, `<U+00AD>`, NUL, `<U+E0100>`. Also `メモ<U+200B>`, `メモ<U+3164>`, `メモ<U+FFFC>`.
+- On screen, `メ<U+200B>モ` shows 「メモに使えない制御文字・見えない文字が含まれています」.
+- `メモ<U+2028>` at the end returns 201, but it is stored as `メモ` (trimmed), so nothing hidden is saved.
+
+**7. PUT and seed data** — pass.
+- I re-saved all 87 seed people with PUT using their current values: 87/87 returned 200.
+- For all 87, the person page and the edit page loaded with 200.
+
+### Search for new gaps in the allowlist
+I looked for allowed characters that draw nothing:
+- **Scan:** in Chrome, I drew every allowed code point (letters, numbers and combining marks that are not default-ignorable) and measured the ink. The CJK ranges, Hangul syllables and U+20000 and above were skipped.
+- **Combining marks:** 0 marks after `価` drew nothing.
+- **Letters:** 11 letters drew nothing in the canvas test.
+  - In the real heading, ゕ, ゖ and ゟ are visible.
+  - U+FAD5 (which NFC turns into U+25249) and U+16910 showed as blank space. This test machine has no font for them; on a normal system they would be drawn by a font or shown as a "missing character" box. I treat this as the test environment, not a defect.
+- **`評価<U+16FE4>`** (a Khitan filler, which is a combining mark but not default-ignorable) returns 201. It shows as a "missing character" box, so it is visible (`s3t5-h1-202.png`).
+- **Keycaps:** `1<U+FE0F><U+20E3>` and `1<U+20E3>` both return 201, but they look clearly different: an emoji keycap versus a 1 plus a box (`s3t5-h1-kc1.png`, `s3t5-h1-kc2.png`).
+- **Look-alike names, reported as a note only, not a failure:**
+  - `Јohn Smith` (Cyrillic Ј, U+0408) returns 201 alongside `John Smith`, and the two headings look almost the same (`s3t5-h1-id190.png`, `s3t5-h1-id203.png`).
+  - Also saved as separate names: `評価Ⅰ` (Roman numeral) next to `評価I`, and `O’Brien` next to `O'Brien`.
+  - **Why this is not a failure:** `docs/spec.md` has no rule against duplicate or look-alike names. Japanese itself has unavoidable look-alikes between allowed letters (カ/力, エ/工, ロ/口, ー/一), which is the same kind of question as the excluded half-width/full-width and compatibility-kanji cases.
+  - **Decision needed:** whether to restrict mixed scripts using Unicode's confusable-character rules (UTS #39). That is a spec question for the planner and the user.
+
+### Sprint contract (3100, throwaway DB)
+- [x] **1. Logged out, the header shows 「ログイン」** — pass. Checked on `/`, `/persons/2` and `/cabinets/6`.
+- [x] **2. Registering with an 8-character password logs you in** — pass. It moves to `/`, and the header shows 「評価UI一般T5 | ログアウト」.
+- [x] **3. A 7-character password is rejected** — pass. 「パスワードは8文字以上にしてください」 is shown, the page stays on `/register`, and the header still shows 「ログイン」.
+- [x] **4. Logging out** — pass. The header goes back to 「ログイン | 新規登録」.
+- [x] **5. Admin grant command, registered address** — pass. The command is documented in `docs/project.md`. It printed 「eval-admin5@s3t5.example.test を管理者にしました」 and exited with code 0.
+- [x] **6. Admin header** — pass. After logging in, the header shows 「人物を追加」.
+- [x] **7. Admin grant command, unregistered address** — pass. It printed 「該当するアカウントがありません」 and exited with code 2. With no argument it exits with code 1.
+- [x] **8. Logged-out and regular users see no edit controls** — pass.
+  - In both states, 「編集」, 「削除」 and 「人物を追加」 appear 0 times.
+  - Logged out, `/persons/new` redirects to `/login`.
+  - A regular user opening `/persons/new` or `/persons/2/edit` sees 「この操作は管理者だけができます」.
+- [x] **9. Logged-out API calls** — pass. POST, PUT and DELETE all return 401.
+- [x] **10. Regular-user API calls** — pass.
+  - POST, PUT and DELETE all return 403, and searching for the name returns 0 hits.
+  - Sending `"role":"admin"` at sign-up still gives `role: user`.
+- [x] **11. Adding a person** — pass. Saving 「評価花子T5」 moves to `/persons/209`, and the heading matches.
+- [x] **12. A katakana reading is rejected** — pass. 「よみがなはひらがなで入力してください」 is shown, the page does not move, and the search finds nothing.
+- [x] **13. Renaming shows everywhere** — pass.
+  - `/persons/2` renamed to 「加藤勝信評価改名T5」 shows in its heading and in the `/cabinets/7` member list.
+  - I changed it back afterwards.
+- [x] **14. Data survives a restart** — pass.
+  - After stopping and restarting the 3100 production server, person 209, the renamed person 2, and the admin's 「人物を追加」 were all still there.
+  - I did not restart the dev server on 3000, because I was told not to stop it. Storage is the same database file either way.
+- [x] **15. Deleting a person** — pass.
+  - The dialog is a true modal (`:modal`) with the text 「評価花子T5を削除します。この操作は取り消せません。」.
+  - 「削除する」 returns to `/`.
+  - Searching 「評価花子」 shows 「該当する結果はありません」, and `/persons/209` returns 404.
+  - Deleting person 2, who has career records, returns 409 `hasCareers`.
+
+### Regression (dev 3000, `local.db` read only)
+- **Cabinet list:** 9 rows. 「現在」 appears only on row 1 (第2次高市内閣).
+- **Suga cabinet dates:** 2020年9月16日 / 2021年10月4日.
+- **`/cabinets/6`:** 19 rows. Row 1 is 内閣総理大臣 (石破茂), 林芳正 is included, and every row has exactly one source link.
+- **`/persons/2`:** 「加藤勝信」, with 5 career rows.
+- **Search:**
+  - 「かとうかつ」 suggests 加藤勝信.
+  - 「岸田」 then ↑ and Enter goes to `/cabinets/2`.
+  - 「zzzzz」 shows 「該当する結果はありません」.
+- **Not found:** `/cabinets/99999` and `/persons/abc` return 404 with their own headings.
+
+### Edge cases and health
+- **Console:**
+  - Production (3100) form pages, person pages and the delete flow: no errors, no warnings and no page exceptions.
+  - The only errors are expected resource-load messages: the 409 on a duplicate name, and the 404 on the not-found pages on 3000.
+- **Emoji regex (`RGI_Emoji`):** it compiles in HeadlessChrome 157 on both 3100 and 3000.
+- **Server:** no 5xx responses.
+- **Secrets:** none shown on screen or in responses.
+- **Accessibility:**
+  - On an error, the field gets `aria-invalid=true` and `aria-describedby=name-error`, the message uses `role=alert`, and focus moves to the field with the error.
+  - Tab order is: logo, theme switch, 「人物を追加」, 「ログアウト」, search, 「内閣一覧へ戻る」, 「編集」, 「削除」, then the career links.
+
+### Design check (threshold 7/10; Designer made no changes, and I checked for breakage myself)
+**Header height, admin logged in** (light and dark the same):
+
+| Width | Header height |
+|---|---|
+| 375px | 165px |
+| 768px | 109px |
+| 1280px | 61px |
+
+There is no horizontal scrolling at any width (`scrollWidth` equals the viewport).
+
+**Focus rings** (all well above 3:1):
+
+| Where | Ring colour | Contrast |
+|---|---|---|
+| Logo, 「人物を追加」, 「ログアウト」 on the black header | #53b1ff | 9.1:1 |
+| Theme button and search box on the black header | white | 21:1 |
+| 「内閣一覧へ戻る」 on the blue band (#0070d1, measured from pixels) | white | about 4.95:1 |
+| 「編集」 and 「削除」 on the light canvas | #0064b7 | 5.99:1 |
+| Same, on the dark canvas | #53b1ff | 9.1:1 |
+
+- **Design quality: 7/10.** The page heading 「人物を追加」 is a large light-weight title above a divider, with clear steps from field labels to the 「必須」 tag to the hint text. Errors use a left border and a red message (`s3t5-dark-1280-form-err.png`).
+- **Originality: 7/10.** The black header, blue band and white or black canvas are applied consistently, and buttons are pill-shaped. 0 AI-slop signs.
+- **Craft: 7/10.** At 768px the header fits on one row plus the search row. At 375px a long error message wraps cleanly inside the left border (`s3t5-light-375-form-err-fresh.png`).
+- **Functionality: 7/10.** Error state is announced by `aria-invalid` and `role=alert`, focus moves to the field with the error, and every focus ring is above 3:1.
+
+### Suggestions (not reasons to fail)
+- Decide whether to restrict mixed scripts in names (UTS #39 confusable rules), as described above.
+- The `nameInvalidChar` message says 「（制御文字・改行・見えない文字など）」, but `%` and `&` are now rejected too. Wording such as 「氏名に使えない文字が含まれています（使える記号: ・ - ' . など）」 would be clearer.
+- Already deferred items (320px logo wrap, display-name length limit on the server, delete dialog's initial focus, `ThemeToggle` preferring the cookie, Origin check on write APIs, handling of kanji variant sequences and compatibility kanji, and foreign names containing `&` or `,`) remain open.
+
+### Environment and leftovers
+- **Throwaway DB:** `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/eval-s3-t5.db`
+  - Accounts, all `@s3t5.example.test`: `eval-admin5` (admin), `eval-user5`, `eval-ui5`. `eval-seven5` was not created.
+  - People: ids 178–208. Person 209 was created and then deleted. All 87 seed people were re-saved with their existing values, and person 2 was restored to 「加藤勝信」.
+- **`local.db`:** read only. Still persons 87, user 0, id 2 is 「加藤勝信」.
+- **Servers:** 3100 is stopped and returns no response. Dev 3000 is still running (200).
+- **Repository:** `pnpm build` changed `apps/web/next-env.d.ts` (`.next/dev/types` became `.next/types`; uncommitted). Restore it, or let dev regenerate it. I changed no code or docs.
+- **Screenshots and logs:** all in `/tmp/claude-0/-home-user-Japan-Politics/65114978-a6cf-52de-8de6-5cf52771b0d8/scratchpad/` (`s3t5-*.png`, `build-t5.log`, `server-3100-t5*.log`).
+- **Browser:** closed.
+
+VERDICT: PASS
+RETURN_TO: none
