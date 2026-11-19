@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { createDb, type Db } from "./client.ts";
-import { cabinetSeeds, DEPUTY_SOURCE_NOTE, SOURCE_NOTE, type RosterEntry } from "./cabinet-data.ts";
+import { cabinetSeeds, SOURCE_NOTE, type RosterEntry } from "./cabinet-data.ts";
 import { MINISTRIES } from "./cabinet-posts.ts";
 import { cabinetAppointments, cabinets, ministries, persons } from "./schema.ts";
 
@@ -33,7 +33,7 @@ export async function seedInitialData(db: Db): Promise<void> {
       seed.deputies ?? [],
       seed.roster.length,
       seed.sourceUrl,
-      DEPUTY_SOURCE_NOTE,
+      seed.deputyNote ?? SOURCE_NOTE,
     );
   }
 }

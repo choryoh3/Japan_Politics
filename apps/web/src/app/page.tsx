@@ -96,7 +96,7 @@ export default async function HomePage() {
                   </td>
                   <td
                     data-label={t("columns.primeMinister")}
-                    className="px-4 py-4 max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)] max-md:w-full"
+                    className="px-4 py-4 [overflow-wrap:anywhere] max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)] max-md:w-full"
                   >
                     {cabinet.primeMinisterName}
                   </td>

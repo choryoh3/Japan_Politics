@@ -153,9 +153,10 @@ export function RosterTable({
               <td className={`${nameCellClass} px-4 py-4 text-lg font-medium`}>
                 <Link
                   href={`/persons/${row.personId}`}
-                  className="link-inline inline-flex min-h-11 items-center"
+                  className="link-inline inline-flex min-h-11 max-w-full items-center"
                 >
-                  {row.personName}
+                  {/* 空白のない長い氏名だけが、セルの幅で折り返す（普通の氏名は折れない） */}
+                  <span className="min-w-0 [overflow-wrap:anywhere]">{row.personName}</span>
                 </Link>
               </td>
               <td className={`${tenureCellClass} px-4 py-4 text-sm text-mute`}>

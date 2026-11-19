@@ -22,7 +22,9 @@ import { runMigrations } from "./migrate.ts";
 import { createPerson } from "./person-write.ts";
 import { getCabinetDetail, getMinistryPage, listCabinets, listMinistries } from "./queries.ts";
 import { seedInitialData } from "./seed.ts";
-import { cabinetAppointments } from "./schema.ts";
+import { cabinetSeeds } from "./cabinet-data.ts";
+import { hasNoForbiddenMemoChar, hasOnlyAllowedNameChars } from "./person-input.ts";
+import { cabinetAppointments, ministries as ministriesTable } from "./schema.ts";
 
 let dir: string;
 let db: Db;
@@ -136,6 +138,83 @@ describe("府省の初期データ", () => {
       expect(row.sourceUrl.startsWith("https://www.kantei.go.jp/")).toBe(true);
       expect(row.sourceNote).toContain("未確認");
     }
+  });
+});
+
+describe("直近 2 内閣の実在の詳細人事（契約 2・3・4）", () => {
+  /** 区分ごとの人事の行を、内閣名で取り出す。 */
+  async function rowsOf(
+    cabinetName: string,
+    category: "deputyChiefSecretary" | "viceMinister" | "parliamentaryVice",
+  ) {
+    const cabinet = (await listCabinets(db)).find((c) => c.name === cabinetName)!;
+    const detail = await getCabinetDetail(db, cabinet.id);
+    return detail!.roster.filter((row) => postCategory(row.postName) === category);
+  }
+
+  it.each(["第2次高市内閣", "第1次高市内閣"])(
+    "%s に、副長官 3 名・副大臣 20 名以上・政務官 20 名以上が登録されている",
+    async (name) => {
+      expect(await rowsOf(name, "deputyChiefSecretary")).toHaveLength(3);
+      expect((await rowsOf(name, "viceMinister")).length).toBeGreaterThanOrEqual(20);
+      expect((await rowsOf(name, "parliamentaryVice")).length).toBeGreaterThanOrEqual(20);
+    },
+  );
+
+  it("内閣一覧の 1 行目の内閣で、副大臣・政務官の役職名に担当省庁名（略称）が含まれ、氏名がある", async () => {
+    const [latest] = await listCabinets(db);
+    for (const category of ["viceMinister", "parliamentaryVice"] as const) {
+      for (const row of await rowsOf(latest!.name, category)) {
+        const post = CABINET_POSTS.find((p) => p.name === row.postName)!;
+        const ministry = MINISTRIES.find((m) => m.name === post.ministry)!;
+        expect(row.postName).toContain(ministry.shortName);
+        expect(row.personName.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("副大臣の出典 URL は官邸の URL で始まり、出典メモは確認できた事実と未確認の事実を分けて書く", async () => {
+    const [latest] = await listCabinets(db);
+    for (const row of await rowsOf(latest!.name, "viceMinister")) {
+      expect(row.sourceUrl.startsWith("https://www.kantei.go.jp/")).toBe(true);
+      expect(row.sourceNote).toContain("Wikipedia");
+      expect(row.sourceNote).toContain("未確認");
+      expect(hasNoForbiddenMemoChar(row.sourceNote)).toBe(true);
+      expect(row.sourceNote.length).toBeLessThanOrEqual(1000);
+    }
+  });
+
+  it("名簿の役職名はすべて役職マスタにあり、同じ内閣・役職・人物の重複がなく、氏名の検証を通る（兼任は役職ごとの行）", () => {
+    for (const seed of cabinetSeeds) {
+      const keys = new Set<string>();
+      for (const [post, name, kana] of seed.deputies ?? []) {
+        expect(isCabinetPost(post), `${post}`).toBe(true);
+        expect(hasOnlyAllowedNameChars(name), name).toBe(true);
+        expect(name).toBe(name.normalize("NFC"));
+        expect(kana).toMatch(/^[ぁ-ゖー]+$/);
+        const key = `${post}/${name}`;
+        expect(keys.has(key), key).toBe(false);
+        keys.add(key);
+      }
+    }
+  });
+
+  it("兼任の人物（酒井庸行）は、復興・内閣府・国土交通の 3 つの副大臣としてそれぞれ登録される", async () => {
+    const [latest] = await listCabinets(db);
+    const posts = (await rowsOf(latest!.name, "viceMinister"))
+      .filter((row) => row.personName === "酒井庸行")
+      .map((row) => row.postName)
+      .sort();
+    expect(posts).toEqual(["内閣府副大臣", "国土交通副大臣", "復興副大臣"].sort());
+  });
+
+  it("菅内閣には副大臣・政務官・副長官の初期データがなく、2 回投入しても全体の件数が増えない", async () => {
+    expect(await rowsOf("菅内閣", "viceMinister")).toHaveLength(0);
+    expect(await rowsOf("菅内閣", "parliamentaryVice")).toHaveLength(0);
+    const count = async () => (await db.select().from(cabinetAppointments)).length;
+    const before = await count();
+    await seedInitialData(db);
+    expect(await count()).toBe(before);
   });
 });
 
@@ -296,16 +375,41 @@ describe("省庁ページ", () => {
         .filter((name) => name.startsWith("省庁テスト")),
     ).toEqual(["省庁テストA"]);
     const foreign = await getMinistryPage(db, ministries.find((m) => m.name === "外務省")!.id);
-    expect(foreign!.holders.viceMinister).toEqual([]);
+    expect(
+      foreign!.holders.viceMinister.filter((row) => row.personName.startsWith("省庁テスト")),
+    ).toEqual([]);
     // 大臣タブには副大臣の人事は載らない
     expect(finance!.holders.minister.some((row) => row.personName === "省庁テストB")).toBe(false);
   });
 
   it("人事が 1 件もない府省は、3 つの区分すべてが空（エラーにならない）", async () => {
+    // 初期データは全府省に人事があるので、府省だけを入れた空の DB で確かめる
+    const emptyDir = mkdtempSync(join(tmpdir(), "jp-ministry-empty-"));
+    try {
+      const emptyDb = createDb(`file:${join(emptyDir, "empty.db")}`);
+      await runMigrations(emptyDb);
+      const [inserted] = await emptyDb
+        .insert(ministriesTable)
+        .values({ name: "防衛省", sortOrder: 0 })
+        .returning();
+      const page = await getMinistryPage(emptyDb, inserted!.id);
+      expect(page!.holders.minister).toEqual([]);
+      expect(page!.holders.viceMinister).toEqual([]);
+      expect(page!.holders.parliamentaryVice).toEqual([]);
+    } finally {
+      rmSync(emptyDir, { recursive: true, force: true });
+    }
+  });
+
+  it("実在の初期データがある防衛省では、副大臣・政務官が就任日の新しい順で並ぶ", async () => {
     const ministries = await listMinistries(db);
     const page = await getMinistryPage(db, ministries.find((m) => m.name === "防衛省")!.id);
-    expect(page!.holders.viceMinister).toEqual([]);
-    expect(page!.holders.parliamentaryVice).toEqual([]);
+    for (const rows of [page!.holders.viceMinister, page!.holders.parliamentaryVice]) {
+      expect(rows.length).toBeGreaterThan(0);
+      for (let i = 1; i < rows.length; i++) {
+        expect(rows[i - 1]!.startDate >= rows[i]!.startDate).toBe(true);
+      }
+    }
   });
 
   it("人事を削除すると省庁ページからも消える", async () => {

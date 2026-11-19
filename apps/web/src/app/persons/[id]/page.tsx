@@ -76,16 +76,16 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
           >
             <thead className="max-md:sr-only border-b border-ink text-sm text-mute md:table-header-group">
               <tr className="md:table-row">
-                <th scope="col" className="w-[15%] px-4 py-4 font-medium first:pl-0">
+                <th scope="col" className="w-[18%] px-4 py-4 font-medium first:pl-0">
                   {t("columns.post")}
                 </th>
                 <th scope="col" className="w-[22%] px-4 py-4 font-medium">
                   {t("columns.cabinet")}
                 </th>
-                <th scope="col" className="w-[20%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[18%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.startDate")}
                 </th>
-                <th scope="col" className="w-[20%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[19%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.endDate")}
                 </th>
                 <th scope="col" className="w-[23%] whitespace-nowrap px-4 py-4 font-medium">
@@ -99,7 +99,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                   key={career.id}
                   className="border-b border-hairline hover:bg-row-hover max-md:flex max-md:flex-wrap max-md:gap-x-6 max-md:py-4"
                 >
-                  <td className="px-4 py-4 text-lg font-medium first:pl-0 max-md:w-full max-md:p-0">
+                  <td className="px-4 py-4 text-lg font-medium [text-wrap:pretty] first:pl-0 md:max-lg:text-base max-md:w-full max-md:p-0">
                     {career.postName}
                   </td>
                   <td className="px-4 py-4 [word-break:keep-all] md:max-lg:text-sm max-md:w-full max-md:p-0">

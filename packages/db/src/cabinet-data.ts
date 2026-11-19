@@ -9,6 +9,8 @@
  * ページの存在は未確認。実運用前に公式資料との照合が必要。
  */
 
+import { PARLIAMENTARY_VICE_ROSTER, VICE_MINISTER_ROSTER } from "./cabinet-deputies-data.ts";
+
 /** 閣僚 1 件分: [役職, 氏名, よみがな, 在任開始日?, 在任終了日?] */
 export type RosterEntry = readonly [
   post: string,
@@ -29,9 +31,11 @@ export interface CabinetSeed {
   roster: readonly RosterEntry[];
   /**
    * 内閣官房副長官・副大臣・大臣政務官（任意。最新の 2 内閣だけ）。
-   * 閣僚の次の表示順で投入する。出典 URL は閣僚と同じ内閣のページ、メモは DEPUTY_SOURCE_NOTE。
+   * 閣僚の次の表示順で投入する。出典 URL は閣僚と同じ内閣のページの URL の形、メモは deputyNote。
    */
   deputies?: readonly RosterEntry[];
+  /** deputies の出典メモ（deputies があるときだけ。何を確認し、何が未確認かを書く） */
+  deputyNote?: string;
 }
 
 /** 出典メモ（全閣僚人事に共通）。確認できていないことを明記する。 */
@@ -39,10 +43,25 @@ export const SOURCE_NOTE =
   "首相官邸の閣僚名簿ページ（歴代内閣）を想定した出典。首相官邸はこの環境から到達できず、" +
   "内容・URL とも作成者の知識に基づく未確認の情報。公式資料での照合が必要。";
 
-/** 内閣官房副長官・副大臣・大臣政務官の出典メモ。確認できた範囲と、できていない範囲を明記する。 */
-export const DEPUTY_SOURCE_NOTE =
-  "首相官邸の内閣ページを想定した出典。首相官邸はこの環境から到達できず、氏名・役職・URL とも" +
-  "作成者の知識に基づく未確認の情報（官邸のページの実在も未確認）。公式資料での照合が必要。";
+/** 官邸の名簿が確認できなかった旨。出典メモの共通の後半。 */
+const KANTEI_UNCONFIRMED_NOTE =
+  "首相官邸の名簿ページは到達できず未確認。この出典 URL は官邸サイトの URL の形で、ページの実在は未確認。";
+
+/**
+ * 内閣官房副長官・副大臣・大臣政務官の出典メモを作る。
+ * 確認できた事実（Wikipedia の名簿）と、確認できていない事実（官邸のページ）を分けて書く。
+ * @param wikipediaPage 確認に使った Wikipedia のページ名（例: 第2次高市内閣）
+ * @returns 出典メモ（1000 文字以内、制御文字なし）
+ */
+function deputySourceNote(wikipediaPage: string): string {
+  return (
+    `氏名・役職・任命日は日本語版 Wikipedia「${wikipediaPage}」の名簿` +
+    `（https://ja.wikipedia.org/wiki/${wikipediaPage}、取得日 2026-11-19）で確認。` +
+    "よみがなは各人物の Wikipedia ページ冒頭の記載から取得。" +
+    KANTEI_UNCONFIRMED_NOTE +
+    "内閣官房副長官の尾崎正直は、Wikipedia では異体字の「尾﨑正直」と表記されている。"
+  );
+}
 
 const PM = "内閣総理大臣";
 const CHIEF = "内閣官房長官";
@@ -204,18 +223,33 @@ const takaichi: RosterEntry[] = [
 ];
 
 /**
- * 第1次・第2次高市内閣の内閣官房副長官・副大臣・大臣政務官。
- *
- * 【正直な範囲】副大臣・大臣政務官の氏名は、確信を持って書ける知識がなく、公式資料（官邸・各府省）にも
- * この環境から到達できないため、1 人も登録していない（氏名を創作しない）。公式の名簿を確認できる人が
- * ここに [役職, 氏名, よみがな] を足せば、`pnpm db:seed` で投入される（何度流しても件数は増えない）。
- * 内閣官房副長官の 3 名は作成者の知識による（未確認。第2次も同じ顔ぶれと想定）。
+ * 内閣官房副長官 3 名。日本語版 Wikipedia の両内閣の名簿（2026-11-19 取得）に載っている顔ぶれと同じ
+ * （表記は「尾﨑正直」だが、登録済みの人物と同じ「尾崎正直」のままにしている）。
  */
-const takaichiDeputies: RosterEntry[] = [
+const takaichiDeputyChiefSecretaries: RosterEntry[] = [
   ["内閣官房副長官", "尾崎正直", "おざきまさなお"],
   ["内閣官房副長官", "佐藤啓", "さとうけい"],
   ["内閣官房副長官", "露木康浩", "つゆきやすひろ"],
 ];
+
+/**
+ * 副長官・副大臣・大臣政務官を 1 つの一覧にする。副大臣・大臣政務官には任命日を在任開始日として付ける。
+ * @param appointedOn 副大臣・大臣政務官の任命日（YYYY-MM-DD）
+ * @returns 副長官 → 副大臣 → 大臣政務官の順の一覧
+ */
+function takaichiDeputies(appointedOn: string): RosterEntry[] {
+  const withDate = ([post, name, kana]: readonly [string, string, string]): RosterEntry => [
+    post,
+    name,
+    kana,
+    appointedOn,
+  ];
+  return [
+    ...takaichiDeputyChiefSecretaries,
+    ...VICE_MINISTER_ROSTER.map(withDate),
+    ...PARLIAMENTARY_VICE_ROSTER.map(withDate),
+  ];
+}
 
 /** 首相官邸の閣僚名簿ページの URL を作る。 @param dir 官邸サイト内の内閣フォルダ名 */
 function kantei(dir: string): string {
@@ -279,7 +313,8 @@ export const cabinetSeeds: readonly CabinetSeed[] = [
     endDate: "2026-02-18",
     sourceUrl: kantei("104_takaichi"),
     roster: takaichi,
-    deputies: takaichiDeputies,
+    deputies: takaichiDeputies("2025-10-22"),
+    deputyNote: deputySourceNote("第1次高市内閣"),
   },
   {
     name: "第2次高市内閣",
@@ -287,6 +322,7 @@ export const cabinetSeeds: readonly CabinetSeed[] = [
     endDate: null,
     sourceUrl: kantei("105_takaichi"),
     roster: takaichi,
-    deputies: takaichiDeputies,
+    deputies: takaichiDeputies("2026-02-19"),
+    deputyNote: deputySourceNote("第2次高市内閣"),
   },
 ];
