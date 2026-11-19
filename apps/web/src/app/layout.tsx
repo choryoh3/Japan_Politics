@@ -43,7 +43,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body>
         <NextIntlClientProvider>
           <header className="border-b border-hairline-dark bg-canvas-dark text-on-dark">
-            <div className="relative mx-auto flex min-h-12 max-w-7xl flex-wrap items-center gap-x-3 gap-y-1 px-6 py-3 md:gap-x-6 md:px-12 md:py-2">
+            <div className="relative mx-auto flex min-h-12 max-w-7xl flex-wrap items-center gap-x-3 gap-y-1 px-6 py-3 md:gap-x-4 lg:gap-x-6 md:px-12 md:py-2">
               <Link
                 href="/"
                 className="flex min-h-11 w-full shrink-0 items-center text-lg font-medium tracking-wider text-on-dark md:mr-auto md:w-auto"
@@ -51,8 +51,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 {t("appName")}
               </Link>
               <SearchBox />
-              <AuthNav />
-              <ThemeToggle />
+              <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-4 gap-y-1 md:flex-nowrap md:gap-x-4">
+                <AuthNav />
+                <ThemeToggle />
+              </div>
             </div>
           </header>
           <main className="mx-auto max-w-7xl px-6 pb-16 pt-12 md:px-12 md:pb-section md:pt-16">

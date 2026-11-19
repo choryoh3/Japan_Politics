@@ -169,6 +169,47 @@ describe("人物の入力検証", () => {
     }
   });
 
+  it("氏名が見えない文字だけなら nameRequired で拒否する", () => {
+    for (const bad of ["\u200B", "\u200B\u200C\u200D\u2060", "\u200D", " \u200B "]) {
+      expect(validatePersonInput({ name: bad, kana: "あ" })).toEqual({
+        ok: false,
+        errors: { name: "nameRequired" },
+      });
+    }
+  });
+
+  it("氏名に混ざった見えない文字（U+202E・U+00AD・ゼロ幅）は拒否する", () => {
+    for (const bad of [
+      "\u202E評価逆",
+      "評価\u00AD軟",
+      "評価\u200B幅なし",
+      "評価\u200D幅なし",
+      "評\uFEFF価",
+    ]) {
+      expect(validatePersonInput({ name: bad, kana: "あ" })).toEqual({
+        ok: false,
+        errors: { name: "nameInvalidChar" },
+      });
+    }
+  });
+
+  it("絵文字の結合（ZWJ・旗のタグ）と記号は氏名として許す", () => {
+    const family = "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}";
+    const england = "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}";
+    for (const ok of [family, england, "\u{1F600}", "%_\\", "あ".repeat(50)]) {
+      expect(validatePersonInput({ name: ok, kana: "あ" }).ok).toBe(true);
+    }
+  });
+
+  it("メモの見えない文字は拒否する", () => {
+    for (const bad of ["\u200B", "メモ\u202E", "メモ\u00AD"]) {
+      expect(validatePersonInput({ name: "A", kana: "あ", memo: bad })).toEqual({
+        ok: false,
+        errors: { memo: "memoInvalidChar" },
+      });
+    }
+  });
+
   it("メモは改行とタブを許し、NUL・BEL などは拒否する", () => {
     expect(validatePersonInput({ name: "A", kana: "あ", memo: "一行目\n二行目\t字下げ" }).ok).toBe(
       true,

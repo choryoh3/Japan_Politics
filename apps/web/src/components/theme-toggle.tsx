@@ -67,7 +67,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="inline-flex h-11 shrink-0 items-center rounded-full border border-on-dark/40 px-3 text-sm font-medium text-on-dark transition-colors hover:bg-on-dark/10 active:bg-on-dark/20 md:px-5"
+      className="inline-flex h-11 shrink-0 items-center rounded-full border border-on-dark/40 px-3 text-sm font-medium text-on-dark transition-colors hover:bg-on-dark/10 active:bg-on-dark/20 md:px-4 lg:px-5"
     >
       {t("themeToggle")}
     </button>

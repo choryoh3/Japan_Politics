@@ -129,9 +129,9 @@
     "errors": {
       "nameRequired": "氏名を入力してください",
       "nameTooLong": "氏名は50文字以内にしてください",
-      "nameInvalidChar": "氏名に使えない文字（制御文字・改行など）が含まれています",
+      "nameInvalidChar": "氏名に使えない文字（制御文字・改行・見えない文字など）が含まれています",
       "kanaInvalidChar": "よみがなに使えない文字（制御文字・改行など）が含まれています",
-      "memoInvalidChar": "メモに使えない制御文字が含まれています",
+      "memoInvalidChar": "メモに使えない制御文字・見えない文字が含まれています",
       "nameDuplicate": "同じ氏名の人物が既に登録されています",
       "kanaRequired": "よみがなを入力してください",
       "kanaTooLong": "よみがなは100文字以内にしてください",

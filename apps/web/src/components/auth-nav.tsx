@@ -18,7 +18,7 @@ export async function AuthNav() {
 
   if (!current) {
     return (
-      <nav aria-label={t("account")} className="flex items-center gap-x-6">
+      <nav aria-label={t("account")} className="flex items-center gap-x-4 md:gap-x-6">
         <Link href="/login" className={NAV_LINK_CLASS}>
           {t("login")}
         </Link>
@@ -30,9 +30,9 @@ export async function AuthNav() {
   }
 
   return (
-    <nav aria-label={t("account")} className="flex min-w-0 items-center gap-x-6">
+    <nav aria-label={t("account")} className="flex min-w-0 items-center gap-x-4 md:gap-x-4">
       <span
-        className="max-w-32 truncate text-sm text-on-dark md:max-w-40 xl:max-w-56"
+        className="max-w-24 truncate text-sm text-on-dark md:max-w-24 lg:max-w-40 xl:max-w-56"
         data-testid="current-user-name"
         title={current.name}
       >
