@@ -30,19 +30,34 @@ export function MinistryHoldersTable({
       >
         <thead className="max-md:sr-only border-b border-ink text-sm text-mute md:table-header-group">
           <tr className="md:table-row">
-            <th scope="col" className="w-[17%] whitespace-nowrap px-4 py-4 font-medium first:pl-0">
+            <th
+              scope="col"
+              className="w-[19%] whitespace-nowrap px-4 py-4 font-medium first:pl-0 md:max-lg:pr-2"
+            >
               {t("columns.name")}
             </th>
-            <th scope="col" className="w-[23%] whitespace-nowrap px-4 py-4 font-medium">
+            <th
+              scope="col"
+              className="w-[24%] whitespace-nowrap px-4 py-4 font-medium md:max-lg:px-2 lg:w-[22%]"
+            >
               {t("columns.post")}
             </th>
-            <th scope="col" className="w-[24%] whitespace-nowrap px-4 py-4 font-medium">
+            <th
+              scope="col"
+              className="w-[19%] whitespace-nowrap px-4 py-4 font-medium md:max-lg:px-2 lg:w-[21%]"
+            >
               {t("columns.cabinet")}
             </th>
-            <th scope="col" className="w-[18%] whitespace-nowrap px-4 py-4 font-medium">
+            <th
+              scope="col"
+              className="w-[19%] whitespace-nowrap px-4 py-4 font-medium md:max-lg:px-2 lg:w-[19%]"
+            >
               {t("columns.startDate")}
             </th>
-            <th scope="col" className="w-[18%] whitespace-nowrap px-4 py-4 font-medium">
+            <th
+              scope="col"
+              className="w-[19%] whitespace-nowrap px-4 py-4 font-medium md:max-lg:px-2 lg:w-[19%]"
+            >
               {t("columns.endDate")}
             </th>
           </tr>
@@ -53,18 +68,18 @@ export function MinistryHoldersTable({
               key={row.id}
               className="border-b border-hairline hover:bg-row-hover max-md:flex max-md:flex-wrap max-md:gap-x-6 max-md:py-4"
             >
-              <td className="px-4 py-4 text-lg font-medium first:pl-0 max-md:w-full max-md:p-0">
+              <td className="px-4 py-4 text-lg font-medium first:pl-0 md:max-lg:pr-2 md:max-lg:text-base max-md:w-full max-md:p-0">
                 <Link
                   href={`/persons/${row.personId}`}
-                  className="link-inline inline-flex min-h-11 items-center"
+                  className="link-inline inline-flex min-h-11 max-w-full items-center"
                 >
-                  {row.personName}
+                  <span className="min-w-0 [overflow-wrap:anywhere]">{row.personName}</span>
                 </Link>
               </td>
-              <td className="px-4 py-4 max-md:w-full max-md:p-0 max-md:text-sm max-md:text-mute">
+              <td className="px-4 py-4 md:max-lg:px-2 md:max-lg:text-sm max-md:w-full max-md:p-0 max-md:text-sm max-md:text-mute">
                 <span className="whitespace-nowrap">{row.postName}</span>
               </td>
-              <td className="px-4 py-4 [word-break:keep-all] max-md:w-full max-md:p-0">
+              <td className="px-4 py-4 [word-break:keep-all] md:max-lg:px-2 md:max-lg:text-sm max-md:w-full max-md:p-0">
                 <Link
                   href={`/cabinets/${row.cabinetId}`}
                   className="link-inline inline-flex min-h-11 items-center"
@@ -74,13 +89,13 @@ export function MinistryHoldersTable({
               </td>
               <td
                 data-label={t("columns.startDate")}
-                className="px-4 py-4 tabular-nums md:max-lg:text-sm md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                className="px-4 py-4 tabular-nums md:max-lg:px-2 md:max-lg:text-sm md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
               >
                 <FormattedDate date={row.startDate} />
               </td>
               <td
                 data-label={t("columns.endDate")}
-                className="px-4 py-4 tabular-nums md:max-lg:text-sm md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                className="px-4 py-4 tabular-nums md:max-lg:px-2 md:max-lg:text-sm md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
               >
                 <EndDate date={row.endDate} />
               </td>

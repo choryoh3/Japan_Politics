@@ -108,7 +108,7 @@ export function RosterTable({
           <tr className={trHeadClass}>
             <th
               scope="col"
-              className={`${isAdmin ? "w-[22%]" : "w-[34%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider first:pl-0`}
+              className={`${isAdmin ? "w-[22%]" : "w-[30%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider first:pl-0`}
             >
               {t("columns.post")}
             </th>
@@ -120,7 +120,7 @@ export function RosterTable({
             </th>
             <th
               scope="col"
-              className={`${isAdmin ? "w-[21%]" : "w-[24%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider`}
+              className={`${isAdmin ? "w-[21%]" : "w-[28%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider`}
             >
               {t("columns.tenure")}
             </th>

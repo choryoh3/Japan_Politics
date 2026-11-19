@@ -44,7 +44,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body>
         <NextIntlClientProvider>
           <header className="border-b border-hairline-dark bg-canvas-dark text-on-dark">
-            <div className="relative mx-auto flex min-h-12 max-w-7xl flex-wrap items-center gap-x-2 gap-y-1 px-6 py-3 md:gap-x-4 lg:gap-x-6 md:px-12 md:py-2">
+            <div className="relative mx-auto flex min-h-12 max-w-7xl flex-wrap items-center gap-x-2 gap-y-1 px-6 py-3 md:gap-x-3 lg:gap-x-6 md:px-12 md:py-2">
               {/* DOM の順を見た目の順（ロゴ → 配色 → アカウント → 検索）と同じにして、Tab 順と一致させる */}
               <Link
                 href="/"

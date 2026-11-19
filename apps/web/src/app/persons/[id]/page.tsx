@@ -76,19 +76,28 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
           >
             <thead className="max-md:sr-only border-b border-ink text-sm text-mute md:table-header-group">
               <tr className="md:table-row">
-                <th scope="col" className="w-[18%] px-4 py-4 font-medium first:pl-0">
+                <th scope="col" className="w-[27%] px-4 py-4 font-medium first:pl-0 lg:w-[22%]">
                   {t("columns.post")}
                 </th>
-                <th scope="col" className="w-[22%] px-4 py-4 font-medium">
+                <th scope="col" className="w-[20%] px-4 py-4 font-medium lg:w-[22%]">
                   {t("columns.cabinet")}
                 </th>
-                <th scope="col" className="w-[18%] whitespace-nowrap px-4 py-4 font-medium">
+                <th
+                  scope="col"
+                  className="w-[20%] whitespace-nowrap px-4 py-4 font-medium md:max-lg:px-2 lg:w-[18%]"
+                >
                   {t("columns.startDate")}
                 </th>
-                <th scope="col" className="w-[19%] whitespace-nowrap px-4 py-4 font-medium">
+                <th
+                  scope="col"
+                  className="w-[20%] whitespace-nowrap px-4 py-4 font-medium md:max-lg:px-2 lg:w-[18%]"
+                >
                   {t("columns.endDate")}
                 </th>
-                <th scope="col" className="w-[23%] whitespace-nowrap px-4 py-4 font-medium">
+                <th
+                  scope="col"
+                  className="w-[13%] whitespace-nowrap px-4 py-4 font-medium lg:w-[20%]"
+                >
                   {t("columns.source")}
                 </th>
               </tr>
@@ -112,13 +121,13 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                   </td>
                   <td
                     data-label={t("columns.startDate")}
-                    className="px-4 py-4 tabular-nums md:max-lg:text-sm md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                    className="px-4 py-4 tabular-nums md:max-lg:px-2 md:max-lg:text-sm md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
                   >
                     <FormattedDate date={career.startDate} />
                   </td>
                   <td
                     data-label={t("columns.endDate")}
-                    className="px-4 py-4 tabular-nums md:max-lg:text-sm md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
+                    className="px-4 py-4 tabular-nums md:max-lg:px-2 md:max-lg:text-sm md:whitespace-nowrap max-md:w-full max-md:p-0 max-md:text-sm max-md:before:mr-2 max-md:before:text-mute max-md:before:content-[attr(data-label)]"
                   >
                     <EndDate date={career.endDate} />
                   </td>

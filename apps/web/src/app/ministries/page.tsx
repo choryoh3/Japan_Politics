@@ -29,7 +29,7 @@ export default async function MinistriesPage() {
           className="mt-12 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3"
         >
           {items.map((item) => (
-            <li key={item.id} className="border-b border-hairline">
+            <li key={item.id} className="border-b border-hairline hover:bg-row-hover">
               <Link
                 href={`/ministries/${item.id}`}
                 className="link-inline flex min-h-14 items-center whitespace-nowrap text-lg font-medium"
