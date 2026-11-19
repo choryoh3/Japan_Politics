@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { createDb, type Db } from "./client.ts";
 import { validatePersonInput } from "./person-input.ts";
 import { createPerson, deletePerson, grantAdmin, updatePerson } from "./person-write.ts";
-import { user } from "./schema.ts";
+import { persons, user } from "./schema.ts";
 import { runMigrations } from "./migrate.ts";
 import { getCabinetDetail, getPersonProfile, listCabinets, searchSuggestions } from "./queries.ts";
 import { seedInitialData } from "./seed.ts";
@@ -196,7 +196,7 @@ describe("人物の入力検証", () => {
   it("絵文字の結合（ZWJ・旗のタグ）と記号は氏名として許す", () => {
     const family = "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}";
     const england = "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}";
-    for (const ok of [family, england, "\u{1F600}", "%_\\", "あ".repeat(50)]) {
+    for (const ok of [family, england, "\u{1F600}", "あ".repeat(50)]) {
       expect(validatePersonInput({ name: ok, kana: "あ" }).ok).toBe(true);
     }
   });
@@ -239,7 +239,6 @@ describe("人物の入力検証", () => {
       "🏴\u200D☠\uFE0F",
       "👁\uFE0F\u200D🗨\uFE0F",
       "🇯🇵",
-      "%_\\",
       "あ".repeat(50),
     ];
     for (const ok of valid) {
@@ -288,6 +287,149 @@ describe("人物の入力検証", () => {
       ok: true,
       value: { name: "A", kana: "あ", birthDate: null, memo: null },
     });
+  });
+});
+
+describe("氏名の許可リスト方式の検証", () => {
+  const check = (name: string) => validatePersonInput({ name, kana: "あ" });
+  const family = "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}";
+  const england = "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}";
+
+  it("見える文字が無い氏名は nameRequired", () => {
+    const bad = [
+      "\uFFF9",
+      "\uFFFA",
+      "\uFFFB",
+      "\uFFFC",
+      "\u3164",
+      "\u2800",
+      "\u034F",
+      "\uFE0F",
+      "\u0301",
+      "\u115F",
+      "\u1160",
+      "・",
+      "-",
+      "・-.",
+      "   ",
+      "\u3000\u3000",
+    ];
+    for (const name of bad) {
+      expect(check(name)).toEqual({ ok: false, errors: { name: "nameRequired" } });
+    }
+  });
+
+  it("許可外の文字が混ざった氏名は nameInvalidChar", () => {
+    const bad = [
+      "評価\uFFF9",
+      "評価\uFFFC",
+      "評価\u2028行",
+      "評価\u2029段",
+      "評価\u00A0空白",
+      "評価\u2003空白",
+      "評価\u202F空白",
+      "評価\uFE0E",
+      "評価\u180B",
+      "評価\u{E0100}",
+      "評価😀\u{E0061}",
+      "評価😀\u200D😀",
+      "評価😀\uFE0F",
+      "\u0301評価",
+      "評価 \u0301",
+      "評価・\u0301",
+      "評価😀\u0301",
+      "評価\u3099",
+      "評価★",
+      "評価\u2800",
+      "評価\u3164",
+      "\u0000評価",
+      "評価\u0007",
+      "評\n価",
+      "評\t価",
+      "評\u0085価",
+      "評\u200B価",
+      "\u202E評価",
+      "評価\u00AD軟",
+      "評価\u200B",
+      "評価\u200D",
+      "評\uFEFF価",
+    ];
+    for (const name of bad) {
+      expect(check(name)).toEqual({ ok: false, errors: { name: "nameInvalidChar" } });
+    }
+  });
+
+  it("許可する氏名は ok で、値は変わらない", () => {
+    const ok = [
+      "安倍\u3000晋三",
+      "John Smith",
+      "O'Brien",
+      "O\u2019Brien",
+      "山田・太郎",
+      "Jean-Luc",
+      "J. Smith",
+      "評価髙橋﨑山齋藤邊渡ヶ々ーカタカナがぎぐ",
+      "👩🏽\u200D💻",
+      family,
+      england,
+      "🏳\uFE0F\u200D🌈",
+      "🏴\u200D☠\uFE0F",
+      "👁\uFE0F\u200D🗨\uFE0F",
+      "🇯🇵",
+      "あ".repeat(50),
+      "e\u0301",
+      "A3",
+    ];
+    for (const name of ok) {
+      const result = check(name);
+      expect(result.ok).toBe(true);
+      if (result.ok) expect(result.value.name).toBe(name.normalize("NFC"));
+    }
+    // 許可リスト外の記号（% _ \）は拒否される（SQL の LIKE 記号の扱いは検索側のテストで確認）
+    expect(check("評価%_\\")).toEqual({ ok: false, errors: { name: "nameInvalidChar" } });
+    expect(check("あ".repeat(51))).toEqual({ ok: false, errors: { name: "nameTooLong" } });
+  });
+
+  it("半角スペースの連続は1つに畳まれ、前後の空白は取り除かれる", () => {
+    const one = check("評価 空白");
+    const two = check("評価  空白");
+    expect(one.ok && two.ok).toBe(true);
+    if (one.ok && two.ok) expect(two.value.name).toBe(one.value.name);
+    const trimmed = check("\u3000 評価 \u3000");
+    expect(trimmed.ok && trimmed.value.name).toBe("評価");
+  });
+
+  it("NFC の重複は同じ文字列になる", () => {
+    const a = check("評価が");
+    const b = check("評価か\u3099");
+    const c = check("評価き\u3099");
+    const d = check("評価ぎ");
+    expect(a.ok && b.ok && c.ok && d.ok).toBe(true);
+    if (a.ok && b.ok && c.ok && d.ok) {
+      expect(b.value.name).toBe(a.value.name);
+      expect(c.value.name).toBe(d.value.name);
+    }
+  });
+
+  it("メモは U+FFFC・U+2028・U+2029・U+2800・Cf を拒否し、改行とタブ・絵文字は許す", () => {
+    for (const bad of ["a\uFFFC", "a\u2028b", "a\u2029b", "a\u2800", "a\uFFF9", "a\u200B"]) {
+      expect(validatePersonInput({ name: "A", kana: "あ", memo: bad })).toEqual({
+        ok: false,
+        errors: { memo: "memoInvalidChar" },
+      });
+    }
+    const memo = `一行目\n二行目\t${family}${england}`;
+    expect(validatePersonInput({ name: "A", kana: "あ", memo }).ok).toBe(true);
+  });
+
+  it("seed の全員の氏名が検証 ok で、検証後も値が変わらない", async () => {
+    const rows = await db.select({ name: persons.name, kana: persons.kana }).from(persons);
+    expect(rows.length).toBeGreaterThanOrEqual(87);
+    for (const row of rows) {
+      const result = validatePersonInput({ name: row.name, kana: row.kana });
+      expect(result.ok).toBe(true);
+      if (result.ok) expect(result.value.name).toBe(row.name);
+    }
   });
 });
 
