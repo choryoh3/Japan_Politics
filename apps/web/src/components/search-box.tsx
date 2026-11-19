@@ -170,9 +170,15 @@ export function SearchBox() {
           active ? "bg-primary text-on-dark" : "text-ink"
         }`}
       >
-        <span className="font-medium">{option.label}</span>
+        <span className="min-w-0 max-w-full font-medium [overflow-wrap:anywhere]">
+          {option.label}
+        </span>
         {option.hint && (
-          <span className={`text-sm ${active ? "text-on-dark" : "text-mute"}`}>{option.hint}</span>
+          <span
+            className={`min-w-0 max-w-full text-sm [overflow-wrap:anywhere] ${active ? "text-on-dark" : "text-mute"}`}
+          >
+            {option.hint}
+          </span>
         )}
       </li>
     );

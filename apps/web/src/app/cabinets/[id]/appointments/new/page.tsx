@@ -27,7 +27,8 @@ export default async function NewAppointmentPage({ params }: { params: Promise<{
         {t("createTitle")}
       </h1>
       <p className="mt-4 text-body">
-        {t("cabinetLabel")}: <span className="font-medium">{detail.name}</span>
+        {t("cabinetLabel")}:{" "}
+        <span className="font-medium [overflow-wrap:anywhere]">{detail.name}</span>
       </p>
       <AppointmentForm
         cabinetId={detail.id}

@@ -163,7 +163,10 @@ export function PersonPicker({
           {labelContent}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-4">
-          <p className="text-lg font-medium" data-testid="selected-person">
+          <p
+            className="min-w-0 text-lg font-medium [overflow-wrap:anywhere]"
+            data-testid="selected-person"
+          >
             <span className="sr-only">{t("selected")}: </span>
             {value.name}
           </p>
@@ -231,8 +234,12 @@ export function PersonPicker({
               onClick={() => choose({ id: person.id, name: person.name })}
               className="flex min-h-11 w-full flex-wrap items-baseline gap-x-3 px-4 py-2 text-left text-ink hover:bg-row-hover"
             >
-              <span className="font-medium">{person.name}</span>
-              <span className="text-sm text-mute">{person.kana}</span>
+              <span className="min-w-0 max-w-full font-medium [overflow-wrap:anywhere]">
+                {person.name}
+              </span>
+              <span className="min-w-0 max-w-full text-sm text-mute [overflow-wrap:anywhere]">
+                {person.kana}
+              </span>
             </button>
           </li>
         ))}

@@ -31,7 +31,8 @@ export default async function EditAppointmentPage({
     <div>
       <h1 className="text-[32px] font-light leading-tight md:text-display-xl">{t("editTitle")}</h1>
       <p className="mt-4 text-body">
-        {t("cabinetLabel")}: <span className="font-medium">{detail.name}</span>
+        {t("cabinetLabel")}:{" "}
+        <span className="font-medium [overflow-wrap:anywhere]">{detail.name}</span>
       </p>
       <AppointmentForm
         cabinetId={detail.id}

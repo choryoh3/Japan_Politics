@@ -94,12 +94,12 @@ export function RosterRowActions({
       <dialog
         ref={dialogRef}
         aria-labelledby={titleId}
-        className="m-auto w-[min(32rem,calc(100vw-3rem))] rounded-card border border-hairline bg-canvas p-6 text-ink md:p-8 backdrop:bg-black/70"
+        className="m-auto w-[min(32rem,calc(100vw-3rem))] whitespace-normal rounded-card border border-hairline bg-canvas p-6 text-ink md:p-8 backdrop:bg-black/70"
       >
         <h2 id={titleId} className="text-heading-lg font-light">
           {t("deleteDialogTitle")}
         </h2>
-        <p className="mt-4 text-body">
+        <p className="mt-4 text-body [overflow-wrap:anywhere]">
           {t("deleteDialogBody", { post: postName, name: personName })}
         </p>
         {errorKey ? (

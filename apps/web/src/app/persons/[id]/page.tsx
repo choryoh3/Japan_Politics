@@ -38,7 +38,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
         >
           {tc("backToList")}
         </Link>
-        <h1 className="mt-6 text-[32px] font-light leading-tight tracking-tight [text-wrap:balance] md:text-display-xl">
+        <h1 className="mt-6 text-[32px] font-light leading-tight tracking-tight [overflow-wrap:anywhere] [text-wrap:balance] md:text-display-xl">
           {profile.name}
         </h1>
         <p className="mt-2 border-t border-on-dark/40 pt-4 text-lg font-light text-on-dark">
@@ -79,7 +79,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                 <th scope="col" className="w-[15%] px-4 py-4 font-medium first:pl-0">
                   {t("columns.post")}
                 </th>
-                <th scope="col" className="w-[20%] px-4 py-4 font-medium">
+                <th scope="col" className="w-[22%] px-4 py-4 font-medium">
                   {t("columns.cabinet")}
                 </th>
                 <th scope="col" className="w-[20%] whitespace-nowrap px-4 py-4 font-medium">
@@ -88,7 +88,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                 <th scope="col" className="w-[20%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.endDate")}
                 </th>
-                <th scope="col" className="w-[25%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[23%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.source")}
                 </th>
               </tr>
@@ -102,7 +102,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                   <td className="px-4 py-4 text-lg font-medium first:pl-0 max-md:w-full max-md:p-0">
                     {career.postName}
                   </td>
-                  <td className="px-4 py-4 [word-break:keep-all] max-md:w-full max-md:p-0">
+                  <td className="px-4 py-4 [word-break:keep-all] md:max-lg:text-sm max-md:w-full max-md:p-0">
                     <Link
                       href={`/cabinets/${career.cabinetId}`}
                       className="link-inline inline-flex min-h-11 items-center"
