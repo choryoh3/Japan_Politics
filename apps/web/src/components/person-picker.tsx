@@ -241,9 +241,9 @@ export function PersonPicker({
         <div
           role="group"
           aria-label={t("registerGroup")}
-          className="mt-4 space-y-4 rounded-card bg-surface-card p-4"
+          className="mt-4 space-y-4 rounded-card border-l-4 border-primary bg-surface-card p-4"
         >
-          <p role="status" className="text-body">
+          <p role="status" className="font-medium text-ink">
             {t("noMatch")}
           </p>
           <p className="text-body">

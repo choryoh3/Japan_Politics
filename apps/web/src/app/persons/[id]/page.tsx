@@ -141,7 +141,10 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                     )}
                     {/* 出典メモは画面にも出す（根拠の確認状況を、リンクを開かなくても読めるように） */}
                     {career.sourceNote !== "" ? (
-                      <p className="whitespace-pre-wrap text-sm text-mute [overflow-wrap:anywhere]">
+                      <p
+                        title={career.sourceNote}
+                        className="whitespace-pre-wrap text-sm text-mute [overflow-wrap:anywhere] md:line-clamp-2"
+                      >
                         {career.sourceNote}
                       </p>
                     ) : null}
