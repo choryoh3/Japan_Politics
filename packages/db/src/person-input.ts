@@ -104,27 +104,47 @@ function splitNameElements(name: string): NameElement[] {
  * @param value 氏名
  * @returns 見える要素があれば true
  */
-function hasVisibleChar(value: string): boolean {
+export function hasVisibleChar(value: string): boolean {
   return splitNameElements(value).some((element) => element.kind === "visible");
 }
 
+/** 氏名・内閣名の許可リストの設定。 */
+export interface AllowedTextOptions {
+  /** 絵文字を許すか（氏名は許す。内閣名は許さない） */
+  allowEmoji: boolean;
+  /** 許す区切り記号 */
+  separators: ReadonlySet<string>;
+}
+
+/** 氏名の許可設定（絵文字あり、区切りは ALLOWED_SEPARATORS）。 */
+const PERSON_NAME_OPTIONS: AllowedTextOptions = {
+  allowEmoji: true,
+  separators: ALLOWED_SEPARATORS,
+};
+
 /**
- * 氏名が「許可する要素」だけでできているかを調べる。
+ * 文字列が「許可する要素」だけでできているかを調べる。
  *
- * 許可するもの: 文字（\p{L}）、数字（\p{N}）、RGI 絵文字、区切り記号（・ · - ' ’ .）、
+ * 許可するもの: 文字（\p{L}）、数字（\p{N}）、RGI 絵文字（設定で許す場合のみ）、設定で許した区切り記号、
  * 半角スペースと全角スペース、直前が文字か数字の結合文字。
  * それ以外（見えない文字、他の記号、他の空白、改行・タブ、先頭や記号の直後の結合文字、異体字セレクタ）は拒否する。
  *
  * なぜ許可リストか: 「見えない文字」「同じ見た目になる文字」は Unicode に際限なくあり、
  * 拒否する文字を列挙する方式では取りこぼしが続くため、使ってよい種類だけを定義する。
  * 例: 「安倍（全角スペース）晋三」「O'Brien」「👩🏽‍💻」は ok。「評価\u00A0空白」「評価\uFFF9」「\u0301評価」は拒否。
- * @param value 氏名（NFC・空白の畳み込み後）
+ * @param value 文字列（NFC・空白の畳み込み後）
+ * @param options 許可設定（省略すると氏名用）
  * @returns 許可する要素だけなら true
  */
-function hasOnlyAllowedNameChars(value: string): boolean {
+export function hasOnlyAllowedNameChars(
+  value: string,
+  options: AllowedTextOptions = PERSON_NAME_OPTIONS,
+): boolean {
   let previous: NameElement | null = null;
   for (const element of splitNameElements(value)) {
     if (element.kind === "invalid") return false;
+    if (element.isEmoji && !options.allowEmoji) return false;
+    if (element.kind === "separator" && !options.separators.has(element.text)) return false;
     // 結合文字は、文字・数字（またはその結合文字）の直後だけ。絵文字や記号・空白の後ろは重複の元になる
     if (element.kind === "mark") {
       const followsBase =
@@ -144,7 +164,7 @@ function hasOnlyAllowedNameChars(value: string): boolean {
  * @param value 入力値
  * @returns 文字列なら正規化した文字列、それ以外はそのまま（型の検証は後段で行う）
  */
-function normalizeName(value: unknown): unknown {
+export function normalizeName(value: unknown): unknown {
   return typeof value === "string" ? value.normalize("NFC").replace(/ {2,}/g, " ") : value;
 }
 
@@ -160,7 +180,7 @@ const FORBIDDEN_MEMO_CHAR_PATTERN =
  * @param value 文字列
  * @returns 禁止文字がなければ true
  */
-function hasNoForbiddenMemoChar(value: string): boolean {
+export function hasNoForbiddenMemoChar(value: string): boolean {
   const withoutAllowed = value.replace(/[\n\r\t]/g, "").replace(RGI_EMOJI_GLOBAL, "");
   return !FORBIDDEN_MEMO_CHAR_PATTERN.test(withoutAllowed);
 }
@@ -177,7 +197,7 @@ export const PERSON_MEMO_MAX_LENGTH = 1000;
  * @param value 日付文字列
  * @returns 実在する日付なら true
  */
-function isRealDate(value: string): boolean {
+export function isRealDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
@@ -188,7 +208,7 @@ function isRealDate(value: string): boolean {
  * @param value 入力値
  * @returns 空なら null、それ以外はそのまま
  */
-function emptyToNull(value: unknown): unknown {
+export function emptyToNull(value: unknown): unknown {
   if (value === undefined || value === null) return null;
   if (typeof value === "string" && value.trim() === "") return null;
   return value;
@@ -208,7 +228,7 @@ export const personInputSchema = z.object({
       // 見える文字（文字・数字・絵文字）が無い氏名は「未入力」と同じ扱いにする
       .refine(hasVisibleChar, { error: "nameRequired" })
       .max(PERSON_NAME_MAX_LENGTH, { error: "nameTooLong" })
-      .refine(hasOnlyAllowedNameChars, { error: "nameInvalidChar" }),
+      .refine((value) => hasOnlyAllowedNameChars(value), { error: "nameInvalidChar" }),
   ),
   kana: z
     .string({ error: "kanaRequired" })

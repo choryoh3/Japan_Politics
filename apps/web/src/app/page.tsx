@@ -3,7 +3,9 @@ import { getTranslations } from "next-intl/server";
 import { listCabinets } from "@japan-politics/db";
 import { CabinetName } from "@/components/cabinet-name";
 import { EndDate, FormattedDate } from "@/components/formatted-date";
+import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { SECONDARY_BUTTON_CLASS } from "@/lib/ui-classes";
 
 // 毎回 DB から読む（ビルド時に DB を要求しない）
 export const dynamic = "force-dynamic";
@@ -14,6 +16,8 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const t = await getTranslations("cabinets");
   const cabinets = await listCabinets(getDb());
+  // 「内閣を追加」は管理者にだけ描画する（権限の最終確認は API が行う）
+  const isAdmin = (await getCurrentUser())?.role === "admin";
 
   return (
     <div>
@@ -23,6 +27,13 @@ export default async function HomePage() {
       <p className="mt-4 max-w-[40em] text-base text-body [word-break:auto-phrase] md:text-lg">
         {t("description")}
       </p>
+      {isAdmin ? (
+        <div className="mt-6">
+          <Link href="/cabinets/new" className={SECONDARY_BUTTON_CLASS}>
+            {t("add")}
+          </Link>
+        </div>
+      ) : null}
       {cabinets.length === 0 ? (
         <p className="mt-12 rounded-card bg-surface-card p-8 text-body">{t("empty")}</p>
       ) : (

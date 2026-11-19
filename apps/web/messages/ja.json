@@ -17,7 +17,8 @@
       "primeMinister": "内閣総理大臣",
       "startDate": "発足日",
       "endDate": "終了日"
-    }
+    },
+    "add": "内閣を追加"
   },
   "cabinetDetail": {
     "period": "在任期間",
@@ -29,14 +30,32 @@
       "post": "役職",
       "name": "氏名",
       "tenure": "在任",
-      "source": "出典"
+      "source": "出典",
+      "actions": "操作"
     },
     "tenureFrom": "{date}から",
     "tenureUntil": "{date}まで",
     "tenureBetween": "{start}から{end}まで",
     "sourceLabel": "{post}の出典",
     "notFoundTitle": "内閣が見つかりません",
-    "notFoundBody": "指定された内閣は存在しないか、削除されました。"
+    "notFoundBody": "指定された内閣は存在しないか、削除されました。",
+    "empty": "登録された閣僚はいません",
+    "editCabinet": "内閣を編集",
+    "addAppointment": "閣僚を追加",
+    "adminActions": "管理者の操作",
+    "edit": "編集",
+    "delete": "削除",
+    "noSource": "出典なし",
+    "deleteDialogTitle": "閣僚人事を削除しますか",
+    "deleteDialogBody": "{post}の{name}の人事を削除します。この操作は取り消せません。",
+    "deleteConfirm": "削除する",
+    "deleteCancel": "キャンセル",
+    "deleting": "削除中",
+    "deleteErrors": {
+      "notFound": "人事が見つかりません。既に削除された可能性があります。",
+      "forbidden": "管理者だけが使える操作です",
+      "unknown": "削除できませんでした。時間をおいてもう一度お試しください。"
+    }
   },
   "search": {
     "placeholder": "人物・内閣を検索",
@@ -72,11 +91,12 @@
     "deleteCancel": "キャンセル",
     "deleting": "削除中",
     "deleteErrors": {
-      "hasCareers": "経歴のある人物は削除できません",
+      "hasCareers": "経歴が登録されている人物は削除できません",
       "notFound": "人物が見つかりません。既に削除された可能性があります。",
       "forbidden": "管理者だけが使える操作です",
       "unknown": "削除できませんでした。時間をおいてもう一度お試しください。"
-    }
+    },
+    "noSource": "出典なし"
   },
   "nav": {
     "login": "ログイン",
@@ -123,9 +143,9 @@
     "cancel": "キャンセル",
     "required": "必須",
     "forbiddenTitle": "この操作は管理者だけができます",
-    "forbiddenBody": "人物の追加・修正・削除は管理者のアカウントでログインしてください。",
+    "forbiddenBody": "人物・内閣・閣僚人事の追加・修正・削除は管理者のアカウントでログインしてください。",
     "loginRequiredTitle": "ログインが必要です",
-    "loginRequiredBody": "人物の追加・修正は管理者のアカウントでログインしてください。",
+    "loginRequiredBody": "人物・内閣・閣僚人事の追加・修正は管理者のアカウントでログインしてください。",
     "errors": {
       "nameRequired": "氏名を入力してください",
       "nameTooLong": "氏名は50文字以内にしてください",
@@ -142,5 +162,102 @@
       "forbidden": "管理者だけが使える操作です",
       "unknown": "保存できませんでした。時間をおいてもう一度お試しください。"
     }
+  },
+  "cabinetForm": {
+    "createTitle": "内閣を追加",
+    "editTitle": "内閣を編集",
+    "name": "内閣名",
+    "startDate": "発足日",
+    "endDate": "終了日（任意）",
+    "endDateHint": "現在も続いている内閣は空欄にします",
+    "required": "必須",
+    "save": "保存",
+    "saving": "保存中",
+    "cancel": "キャンセル",
+    "errors": {
+      "nameRequired": "内閣名は必須です",
+      "nameTooLong": "内閣名は50文字以内にしてください",
+      "nameInvalidChar": "内閣名に使えない文字が含まれています（使えるのは文字・数字・空白・中黒・ハイフンだけです）",
+      "nameDuplicate": "同じ内閣名の内閣が既に登録されています",
+      "startDateRequired": "発足日は必須です",
+      "startDateInvalid": "発足日は実在する日付で入力してください",
+      "endDateInvalid": "終了日は実在する日付で入力してください",
+      "endDateBeforeStart": "終了日は発足日以降の日付にしてください",
+      "appointmentBeforeStart": "この内閣には新しい発足日より前の日付の閣僚人事があります。先に人事の日付を直してください",
+      "appointmentAfterEnd": "この内閣には新しい終了日より後の日付の閣僚人事があります。先に人事の日付を直してください",
+      "unauthorized": "ログインが必要です。ログインし直してください。",
+      "forbidden": "管理者だけが使える操作です",
+      "notFound": "内閣が見つかりません。既に削除された可能性があります。",
+      "unknown": "保存できませんでした。時間をおいてもう一度お試しください。"
+    }
+  },
+  "appointmentForm": {
+    "createTitle": "閣僚を追加",
+    "editTitle": "閣僚人事を編集",
+    "cabinetLabel": "対象の内閣",
+    "postName": "役職",
+    "postPlaceholder": "選択してください",
+    "startDate": "就任日（任意）",
+    "endDate": "退任日（任意）",
+    "dateHint": "空欄の場合は、内閣の発足日・終了日と同じになります",
+    "sourceUrl": "出典URL（任意）",
+    "sourceUrlHint": "http:// または https:// で始まるURLを入力してください",
+    "sourceNote": "出典メモ（任意）",
+    "required": "必須",
+    "save": "保存",
+    "saving": "保存中",
+    "cancel": "キャンセル",
+    "errors": {
+      "postRequired": "役職を選んでください",
+      "postInvalid": "役職を一覧から選んでください",
+      "postOverlap": "同じ期間にこの役職の在任者がいます",
+      "personRequired": "人物を選んでください",
+      "personNotFound": "選んだ人物が見つかりません。選び直してください",
+      "appointmentDuplicate": "この人物は、同じ内閣で既にこの役職に登録されています",
+      "startDateInvalid": "就任日は実在する日付で入力してください",
+      "endDateInvalid": "退任日は実在する日付で入力してください",
+      "endDateBeforeStart": "退任日は就任日以降の日付にしてください",
+      "startOutsideCabinet": "就任日は内閣の在任期間内にしてください",
+      "endOutsideCabinet": "退任日は内閣の在任期間内にしてください",
+      "sourceUrlInvalid": "出典URLは http:// または https:// で始まるURLを入力してください",
+      "sourceUrlTooLong": "出典URLは2000文字以内にしてください",
+      "sourceNoteInvalid": "出典メモを正しく入力してください",
+      "sourceNoteTooLong": "出典メモは1000文字以内にしてください",
+      "sourceNoteInvalidChar": "出典メモに使えない制御文字・見えない文字が含まれています",
+      "unauthorized": "ログインが必要です。ログインし直してください。",
+      "forbidden": "管理者だけが使える操作です",
+      "notFound": "内閣または人事が見つかりません。既に削除された可能性があります。",
+      "unknown": "保存できませんでした。時間をおいてもう一度お試しください。"
+    }
+  },
+  "personPicker": {
+    "label": "人物",
+    "required": "必須",
+    "placeholder": "氏名・よみがなの一部を入力",
+    "searching": "検索中",
+    "candidates": "候補一覧",
+    "noMatch": "どの人物にも一致しません",
+    "searchError": "検索できませんでした。時間をおいてもう一度お試しください。",
+    "selected": "選択中の人物",
+    "change": "選び直す",
+    "registerTitle": "新しい人物として登録",
+    "registerName": "氏名",
+    "registerKana": "よみがな",
+    "registerKanaHint": "ひらがなで入力してください",
+    "registering": "登録中",
+    "registerErrors": {
+      "nameRequired": "氏名を入力してください",
+      "nameTooLong": "氏名は50文字以内にしてください",
+      "nameInvalidChar": "氏名に使えない文字が含まれています",
+      "nameDuplicate": "同じ氏名の人物が既に登録されています。上の候補から選んでください",
+      "kanaRequired": "よみがなを入力してください",
+      "kanaTooLong": "よみがなは100文字以内にしてください",
+      "kanaNotHiragana": "よみがなはひらがなで入力してください",
+      "kanaInvalidChar": "よみがなに使えない文字が含まれています",
+      "unauthorized": "ログインが必要です。ログインし直してください。",
+      "forbidden": "管理者だけが使える操作です",
+      "unknown": "登録できませんでした。時間をおいてもう一度お試しください。"
+    },
+    "registerGroup": "未登録の人物の登録"
   }
 }

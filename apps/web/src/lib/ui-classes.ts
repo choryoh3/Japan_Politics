@@ -13,3 +13,7 @@ export const SECONDARY_BUTTON_CLASS =
 /** エラー文の見た目。 */
 export const ERROR_TEXT_CLASS =
   "mt-2 border-l-2 border-warning pl-3 text-sm font-medium text-warning-ink";
+
+/** 表の行の中の小さめのボタン（編集・削除）の見た目。タップしやすい高さ 44px は保つ。 */
+export const ROW_BUTTON_CLASS =
+  "inline-flex min-h-11 items-center justify-center rounded-full border border-ink px-4 text-sm font-medium text-ink hover:bg-row-hover active:bg-surface-card disabled:cursor-not-allowed disabled:opacity-60";

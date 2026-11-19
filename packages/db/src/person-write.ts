@@ -12,7 +12,7 @@ export type PersonWriteResult =
  * @param error 捕まえたエラー
  * @returns 重複エラーなら true
  */
-function isUniqueViolation(error: unknown): boolean {
+export function isUniqueViolation(error: unknown): boolean {
   let current: unknown = error;
   // libSQL のエラーは原因が cause に入れ子になっていることがあるので辿る
   for (let depth = 0; depth < 5 && current instanceof Error; depth += 1) {

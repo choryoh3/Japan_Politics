@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./person-input": "./src/person-input.ts"
+    "./person-input": "./src/person-input.ts",
+    "./cabinet-input": "./src/cabinet-input.ts",
+    "./cabinet-posts": "./src/cabinet-posts.ts"
   },
   "scripts": {
     "generate": "drizzle-kit generate",

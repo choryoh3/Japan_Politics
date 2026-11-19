@@ -43,8 +43,10 @@ function readStoredTheme(): ThemeChoice | undefined {
 export function ThemeToggle() {
   const t = useTranslations("common");
 
-  // 保険：cookie が無い旧い保存（localStorage のみ）や、not-found から移動した直後でも、保存値を html に再適用する
+  // 保険：cookie が無い旧い保存（localStorage のみ）のときだけ、保存値を html に再適用する。
+  // cookie があれば layout が html の data-theme に入れ済みなので、cookie を優先して localStorage では上書きしない
   useEffect(() => {
+    if (document.documentElement.dataset.theme) return;
     const stored = readStoredTheme();
     if (!stored) return;
     document.documentElement.dataset.theme = stored;

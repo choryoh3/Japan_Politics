@@ -76,19 +76,19 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
           >
             <thead className="max-md:sr-only border-b border-ink text-sm text-mute md:table-header-group">
               <tr className="md:table-row">
-                <th scope="col" className="w-[20%] px-4 py-4 font-medium first:pl-0">
+                <th scope="col" className="w-[16%] px-4 py-4 font-medium first:pl-0">
                   {t("columns.post")}
                 </th>
-                <th scope="col" className="w-[26%] px-4 py-4 font-medium">
+                <th scope="col" className="w-[22%] px-4 py-4 font-medium">
                   {t("columns.cabinet")}
                 </th>
-                <th scope="col" className="w-[22%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[18%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.startDate")}
                 </th>
-                <th scope="col" className="w-[22%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[18%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.endDate")}
                 </th>
-                <th scope="col" className="w-[10%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[26%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.source")}
                 </th>
               </tr>
@@ -122,17 +122,29 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
                   >
                     <EndDate date={career.endDate} />
                   </td>
-                  <td className="px-4 py-4 max-md:ml-auto max-md:self-end max-md:p-0">
-                    <a
-                      href={career.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={career.sourceNote}
-                      aria-label={t("sourceLabel", { post: career.postName })}
-                      className="link-inline inline-flex min-h-11 items-center whitespace-nowrap"
-                    >
-                      {tc("source")}
-                    </a>
+                  <td className="px-4 py-4 max-md:w-full max-md:p-0">
+                    {career.sourceUrl === "" ? (
+                      <span className="inline-flex min-h-11 items-center text-sm text-mute">
+                        {t("noSource")}
+                      </span>
+                    ) : (
+                      <a
+                        href={career.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={career.sourceNote}
+                        aria-label={t("sourceLabel", { post: career.postName })}
+                        className="link-inline inline-flex min-h-11 items-center whitespace-nowrap"
+                      >
+                        {tc("source")}
+                      </a>
+                    )}
+                    {/* 出典メモは画面にも出す（根拠の確認状況を、リンクを開かなくても読めるように） */}
+                    {career.sourceNote !== "" ? (
+                      <p className="whitespace-pre-wrap text-sm text-mute [overflow-wrap:anywhere]">
+                        {career.sourceNote}
+                      </p>
+                    ) : null}
                   </td>
                 </tr>
               ))}
