@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -18,7 +19,7 @@ export const dynamic = "force-dynamic";
  * @param row 閣僚名簿の行
  * @param formatDate 「YYYY-MM-DD」を表示用に直す関数
  * @param t 辞書
- * @returns 在任期間の文言。内閣の期間どおりなら null
+ * @returns 在任期間の表示。内閣の期間どおりなら null
  */
 function tenureText(
   row: RosterRow,
@@ -27,9 +28,21 @@ function tenureText(
     key: "tenureFrom" | "tenureUntil" | "tenureBetween",
     values: Record<string, string>,
   ) => string,
-): string | null {
+): ReactNode {
   if (row.startDate && row.endDate) {
-    return t("tenureBetween", { start: formatDate(row.startDate), end: formatDate(row.endDate) });
+    // 「…から」「…まで」を 1 かたまりずつ折り返さない span にし、間の <wbr> でだけ折り返す。
+    // 文言は辞書の tenureFrom / tenureUntil と同じなので、読み上げ・検索で見える文字列は変わらない
+    return (
+      <>
+        <span className="whitespace-nowrap">
+          {t("tenureFrom", { date: formatDate(row.startDate) })}
+        </span>
+        <wbr />
+        <span className="whitespace-nowrap">
+          {t("tenureUntil", { date: formatDate(row.endDate) })}
+        </span>
+      </>
+    );
   }
   if (row.startDate) return t("tenureFrom", { date: formatDate(row.startDate) });
   if (row.endDate) return t("tenureUntil", { date: formatDate(row.endDate) });
@@ -88,7 +101,7 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
       </section>
 
       {isAdmin ? (
-        <div role="group" aria-label={t("adminActions")} className="mt-6 flex flex-wrap gap-4">
+        <div role="group" aria-label={t("adminActions")} className="mt-10 flex flex-wrap gap-4">
           <Link href={`/cabinets/${detail.id}/edit`} className={SECONDARY_BUTTON_CLASS}>
             {t("editCabinet")}
           </Link>
@@ -114,32 +127,32 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
               <tr className="md:table-row">
                 <th
                   scope="col"
-                  className={`${isAdmin ? "w-[24%]" : "w-[34%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider first:pl-0`}
+                  className={`${isAdmin ? "w-[18%]" : "w-[34%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider first:pl-0`}
                 >
                   {t("columns.post")}
                 </th>
                 <th
                   scope="col"
-                  className={`${isAdmin ? "w-[20%]" : "w-[26%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider`}
+                  className={`${isAdmin ? "w-[19%]" : "w-[26%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider`}
                 >
                   {t("columns.name")}
                 </th>
                 <th
                   scope="col"
-                  className={`${isAdmin ? "w-[20%]" : "w-[24%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider`}
+                  className={`${isAdmin ? "w-[27%]" : "w-[24%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider`}
                 >
                   {t("columns.tenure")}
                 </th>
                 <th
                   scope="col"
-                  className={`${isAdmin ? "w-[12%]" : "w-[16%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider`}
+                  className={`${isAdmin ? "w-[14%]" : "w-[16%]"} whitespace-nowrap px-4 py-4 font-medium tracking-wider`}
                 >
                   {t("columns.source")}
                 </th>
                 {isAdmin ? (
                   <th
                     scope="col"
-                    className="w-[24%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
+                    className="w-[22%] whitespace-nowrap px-4 py-4 font-medium tracking-wider"
                   >
                     {t("columns.actions")}
                   </th>
@@ -166,12 +179,12 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
                       {row.personName}
                     </Link>
                   </td>
-                  <td className="px-4 py-4 text-sm text-mute md:whitespace-nowrap max-md:order-last max-md:empty:hidden max-md:w-full max-md:p-0">
+                  <td className="px-4 py-4 text-sm text-mute max-md:order-last max-md:empty:hidden max-md:w-full max-md:p-0">
                     {tenureText(row, formatDate, (key, values) => t(key, values))}
                   </td>
                   <td className="px-4 py-4 max-md:p-0">
                     {row.sourceUrl === "" ? (
-                      <span className="inline-flex min-h-11 items-center text-sm text-mute">
+                      <span className="inline-flex min-h-11 items-center whitespace-nowrap text-sm text-mute">
                         {t("noSource")}
                       </span>
                     ) : (
@@ -188,7 +201,7 @@ export default async function CabinetDetailPage({ params }: { params: Promise<{ 
                     )}
                   </td>
                   {isAdmin ? (
-                    <td className="px-4 py-2 max-md:w-full max-md:p-0">
+                    <td className="px-4 py-2 md:whitespace-nowrap max-md:w-full max-md:p-0">
                       <RosterRowActions
                         cabinetId={detail.id}
                         appointmentId={row.id}

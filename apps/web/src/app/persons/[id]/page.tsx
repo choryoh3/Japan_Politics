@@ -76,19 +76,19 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
           >
             <thead className="max-md:sr-only border-b border-ink text-sm text-mute md:table-header-group">
               <tr className="md:table-row">
-                <th scope="col" className="w-[16%] px-4 py-4 font-medium first:pl-0">
+                <th scope="col" className="w-[15%] px-4 py-4 font-medium first:pl-0">
                   {t("columns.post")}
                 </th>
-                <th scope="col" className="w-[22%] px-4 py-4 font-medium">
+                <th scope="col" className="w-[20%] px-4 py-4 font-medium">
                   {t("columns.cabinet")}
                 </th>
-                <th scope="col" className="w-[18%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[20%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.startDate")}
                 </th>
-                <th scope="col" className="w-[18%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[20%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.endDate")}
                 </th>
-                <th scope="col" className="w-[26%] whitespace-nowrap px-4 py-4 font-medium">
+                <th scope="col" className="w-[25%] whitespace-nowrap px-4 py-4 font-medium">
                   {t("columns.source")}
                 </th>
               </tr>

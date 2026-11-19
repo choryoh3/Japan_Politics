@@ -75,7 +75,7 @@ export function RosterRowActions({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap md:flex-nowrap items-center gap-2">
       <Link
         href={`/cabinets/${cabinetId}/appointments/${appointmentId}/edit`}
         aria-describedby={describedBy}
